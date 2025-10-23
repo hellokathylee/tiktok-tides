@@ -1,4 +1,3 @@
-// Global variables
 let allData = {};
 let currentYear = '2019';
 const width = 1200;
@@ -6,7 +5,6 @@ const height = 800;
 let animationRunning = true;
 let startTime = Date.now();
 
-// Load all CSV files
 Promise.all([
     d3.csv('data/TikTok_songs_2019.csv'),
     d3.csv('data/TikTok_songs_2020.csv'),
@@ -20,15 +18,12 @@ Promise.all([
         '2022': processData(data2022)
     };
     
-    // Initialize visualization
     createSolarSystem();
     updateVisualization();
     
-    // Set up year selector event listeners
     d3.selectAll('.year-btn').on('click', function() {
         currentYear = d3.select(this).attr('data-year');
         
-        // Update button styles
         d3.selectAll('.year-btn')
             .classed('btn-primary', false)
             .classed('btn-outline-primary', true);
@@ -36,17 +31,14 @@ Promise.all([
             .classed('btn-primary', true)
             .classed('btn-outline-primary', false);
         
-        // Reset animation timing for smooth transition
         startTime = Date.now();
         
-        // Update visualization
         updateVisualization();
     });
 }).catch(error => {
     console.error('Error loading data:', error);
 });
 
-// Process data: aggregate by artist
 function processData(data) {
     const artistMap = new Map();
     
@@ -70,7 +62,6 @@ function processData(data) {
         artistData.energies.push(energy);
     });
     
-    // Calculate averages and return as array
     return Array.from(artistMap.values()).map(artist => ({
         name: artist.name,
         songCount: artist.songs.length,
@@ -80,21 +71,18 @@ function processData(data) {
     }));
 }
 
-// Map danceability (0-1) to rainbow color
 function danceabilityToColor(danceability) {
-    // Rainbow gradient: Red (0.0) -> Orange (0.15) -> Yellow (0.3) -> Green (0.45) -> Cyan (0.6) -> Blue (0.75) -> Purple (0.9+)
     const colors = [
-        { value: 0.0, color: '#FF0000' },  // Red
-        { value: 0.15, color: '#FF7F00' }, // Orange
-        { value: 0.3, color: '#FFFF00' },  // Yellow
-        { value: 0.45, color: '#00FF00' }, // Green
-        { value: 0.6, color: '#00FFFF' },  // Cyan
-        { value: 0.75, color: '#0000FF' }, // Blue
-        { value: 0.9, color: '#8B00FF' },  // Purple
-        { value: 1.0, color: '#FF00FF' }   // Magenta
+        { value: 0.0, color: '#FF0000' },  
+        { value: 0.15, color: '#FF7F00' }, 
+        { value: 0.3, color: '#FFFF00' },  
+        { value: 0.45, color: '#00FF00' }, 
+        { value: 0.6, color: '#00FFFF' },  
+        { value: 0.75, color: '#0000FF' }, 
+        { value: 0.9, color: '#8B00FF' },  
+        { value: 1.0, color: '#FF00FF' }   
     ];
     
-    // Find the two colors to interpolate between
     for (let i = 0; i < colors.length - 1; i++) {
         if (danceability >= colors[i].value && danceability <= colors[i + 1].value) {
             const t = (danceability - colors[i].value) / (colors[i + 1].value - colors[i].value);
@@ -105,7 +93,6 @@ function danceabilityToColor(danceability) {
     return colors[colors.length - 1].color;
 }
 
-// Create the SVG container
 function createSolarSystem() {
     const svg = d3.select('#solar-system')
         .append('svg')
@@ -114,11 +101,9 @@ function createSolarSystem() {
         .attr('viewBox', `0 0 ${width} ${height}`)
         .attr('preserveAspectRatio', 'xMidYMid meet');
     
-    // Create groups for orbits and planets
     svg.append('g').attr('id', 'orbits');
     svg.append('g').attr('id', 'planets');
     
-    // Draw the sun in the center
     svg.append('circle')
         .attr('class', 'sun')
         .attr('cx', width / 2)
@@ -126,7 +111,6 @@ function createSolarSystem() {
         .attr('r', 40)
         .attr('fill', 'url(#sunGradient)');
     
-    // Create sun gradient
     const defs = svg.append('defs');
     const sunGradient = defs.append('radialGradient')
         .attr('id', 'sunGradient');
@@ -140,14 +124,12 @@ function createSolarSystem() {
         .attr('offset', '100%')
         .attr('stop-color', '#FF8C00');
     
-    // Create tooltip
     d3.select('body').append('div')
         .attr('class', 'tooltip-planet')
         .style('opacity', 0)
         .style('display', 'none');
 }
 
-// Update visualization with current year's data
 function updateVisualization() {
     const data = allData[currentYear];
     if (!data) return;
@@ -157,25 +139,20 @@ function updateVisualization() {
     const minRadius = 80;
     const maxRadius = 350;
     
-    // Scale for planet size (based on song count)
     const sizeScale = d3.scaleSqrt()
         .domain([1, d3.max(data, d => d.songCount)])
         .range([8, 40]);
     
-    // Scale for distance from sun (based on energy)
     const distanceScale = d3.scaleLinear()
         .domain([0, 1])
         .range([minRadius, maxRadius]);
     
-    // Position planets in a circle around the sun
     const angleStep = (2 * Math.PI) / data.length;
     
     const planetsData = data.map((d, i) => {
         const baseAngle = i * angleStep;
         const distance = distanceScale(d.avgEnergy);
         
-        // Orbital speed: planets further out move slower (like real orbits)
-        // Speed inversely proportional to distance
         const orbitalSpeed = 0.00005 / (distance / 100);
         
         return {
@@ -188,7 +165,6 @@ function updateVisualization() {
         };
     });
     
-    // Update orbits
     const orbits = d3.select('#orbits')
         .selectAll('.planet-orbit')
         .data(planetsData, d => d.name);
@@ -210,14 +186,12 @@ function updateVisualization() {
         .attr('r', 0)
         .remove();
     
-    // Update planets
     const planets = d3.select('#planets')
         .selectAll('.planet')
         .data(planetsData, d => d.name);
     
     const tooltip = d3.select('.tooltip-planet');
     
-    // Enter new planets
     const planetsEnter = planets.enter()
         .append('circle')
         .attr('class', 'planet')
@@ -270,7 +244,6 @@ function updateVisualization() {
                 });
         });
     
-    // Update all planets (enter + update)
     planetsEnter.merge(planets)
         .transition()
         .duration(1000)
@@ -279,7 +252,6 @@ function updateVisualization() {
         .attr('r', d => sizeScale(d.songCount))
         .attr('fill', d => danceabilityToColor(d.avgDanceability));
     
-    // Exit old planets
     planets.exit()
         .transition()
         .duration(500)
@@ -288,20 +260,17 @@ function updateVisualization() {
         .attr('cy', centerY)
         .remove();
     
-    // Start animation after initial positioning
     if (animationRunning) {
         animatePlanets(planetsData, centerX, centerY, sizeScale);
     }
 }
 
-// Animate planets orbiting around the sun
 function animatePlanets(planetsData, centerX, centerY, sizeScale) {
     function animate() {
         if (!animationRunning) return;
         
         const elapsed = Date.now() - startTime;
         
-        // Update planet positions
         d3.select('#planets')
             .selectAll('.planet')
             .data(planetsData, d => d.name)
