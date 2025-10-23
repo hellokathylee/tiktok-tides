@@ -19,7 +19,51 @@
     </head>
 
     <body>
-        <h1>TikTok Tides</h1>
+        <div class="container-fluid">
+            <h1 class="text-center my-4">TikTok Tides</h1>
+            <p class="text-center text-muted">Explore viral TikTok artists as planets in our musical solar system</p>
+            
+            <!-- Year Selector -->
+            <div class="text-center mb-4">
+                <div class="btn-group" role="group" aria-label="Year selector">
+                    <button type="button" class="btn btn-primary year-btn" data-year="2019">2019</button>
+                    <button type="button" class="btn btn-outline-primary year-btn" data-year="2020">2020</button>
+                    <button type="button" class="btn btn-outline-primary year-btn" data-year="2021">2021</button>
+                    <button type="button" class="btn btn-outline-primary year-btn" data-year="2022">2022</button>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-item">
+                    <strong>Planet Size:</strong> Number of viral songs
+                </div>
+                <div class="legend-item">
+                    <strong>Distance from Sun:</strong> Average energy
+                </div>
+            </div>
+
+            <!-- Color Gradient Legend -->
+            <div class="color-legend">
+                <div class="color-legend-title">
+                    <strong>Planet Color:</strong> Average Danceability
+                </div>
+                <div class="color-gradient-container">
+                    <div class="color-gradient-bar"></div>
+                    <div class="color-gradient-labels">
+                        <span>0.0<br><small>Low</small></span>
+                        <span>0.2</span>
+                        <span>0.4</span>
+                        <span>0.6</span>
+                        <span>0.8</span>
+                        <span>1.0<br><small>High</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Container -->
+            <div id="solar-system"></div>
+        </div>
 
         <!-- bootstrap js -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
