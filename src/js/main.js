@@ -1,13 +1,13 @@
 // Main scrollytelling orchestrator with enhanced transitions
-import './styles/tokens.css';
-import './styles/base.css';
+import '../css/tokens.css';
+import '../css/base.css';
 import { MotionPatterns } from './motion/patterns.js';
-import { StopwatchViz } from './vizzes/stopwatch/index.js';
-import { PlanetViz } from './vizzes/planet/index.js';
-import { CommunityViz } from './vizzes/community/index.js';
-import { RankingViz } from './vizzes/ranking/index.js';
-import { EmotionViz } from './vizzes/emotion/index.js';
-import { IngredientsViz } from './vizzes/ingredients/index.js';
+import { StopwatchViz } from '../vizzes/stopwatch/index.js';
+import { PlanetViz } from '../vizzes/planet/index.js';
+import { CommunityViz } from '../vizzes/community/index.js';
+import { RankingViz } from '../vizzes/ranking/index.js';
+import { EmotionViz } from '../vizzes/emotion/index.js';
+import { IngredientsViz } from '../vizzes/ingredients/index.js';
 import { initMicroInteractions } from './micro-interactions.js';
 
 // Scene mapping for semantic worlds
