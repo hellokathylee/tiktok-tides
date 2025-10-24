@@ -160,6 +160,7 @@ h1 {
 .planet {
     cursor: pointer;
     transition: all 0.3s ease;
+    pointer-events: all;
 }
 
 .planet:hover {

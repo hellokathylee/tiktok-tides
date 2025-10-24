@@ -201,7 +201,9 @@ function updateVisualization() {
         .attr('fill', d => danceabilityToColor(d.avgDanceability))
         .attr('stroke', '#fff')
         .attr('stroke-width', 2)
-        .on('mouseover', function(event, d) {
+        .on('mouseenter', function(event, d) {
+            d3.select(this).attr('data-original-r', sizeScale(d.songCount));
+            
             d3.select(this)
                 .transition()
                 .duration(200)
@@ -228,12 +230,14 @@ function updateVisualization() {
                 .style('left', (event.pageX + 15) + 'px')
                 .style('top', (event.pageY - 15) + 'px');
         })
-        .on('mouseout', function(event, d) {
+        .on('mouseleave', function(event, d) {
+            const originalR = d3.select(this).attr('data-original-r') || sizeScale(d.songCount);
+            
             d3.select(this)
                 .transition()
                 .duration(200)
                 .attr('stroke-width', 2)
-                .attr('r', sizeScale(d.songCount));
+                .attr('r', originalR);
             
             tooltip
                 .transition()
