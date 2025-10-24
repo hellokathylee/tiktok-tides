@@ -173,6 +173,31 @@ h3 { font-size: var(--font-size-h3); }
   z-index: 1; /* Above body::before background layer */
 }
 
+/* Increase distance between hero and ignite */
+#section-ignite {
+  padding-top: calc(var(--space-8) * 2);
+}
+
+/* Ensure fade section is tall enough to show forest SVG below viz */
+#section-fade {
+  min-height: 140vh;
+  padding-bottom: var(--space-12);
+}
+
+/* Reduce formula section to close gap with fade */
+#section-takeaway {
+  padding-top: var(--space-2);
+  margin-top: calc(-1 * var(--space-8));
+}
+
+/* Ensure ingredients section is tall enough to trigger lab scene */
+#section-ingredients {
+  min-height: 135vh;
+  padding-bottom: 0 !important; /* NO gap before footer */
+  margin-bottom: 0 !important;
+  padding-top: var(--space-6);
+}
+
 .section-container {
   max-width: 100%;
   margin: 0 auto;
@@ -202,6 +227,7 @@ h3 { font-size: var(--font-size-h3); }
 /* Fixed scene background layer - smooth cross-fade between scenes */
 body::before {
   content: '';
+  display: block !important; /* Force display - override any inherited display:none */
   position: fixed;
   inset: 0;
   z-index: 0; /* Changed from -1 to work with section stacking context */
@@ -212,28 +238,30 @@ body::before {
   pointer-events: none; /* Allow clicks to pass through */
 }
 
-/* Cosmos - Deep space with subtle purple */
+/* Cosmos - Deep space with visible purple */
 body[data-scene="cosmos"]::before {
   background: radial-gradient(ellipse 1400px 900px at 50% 30%,
-    rgba(30, 30, 60, 0.4) 0%,
-    rgba(20, 20, 40, 0.3) 40%,
-    rgba(10, 10, 15, 0.2) 70%,
+    rgba(40, 40, 80, 0.65) 0%,
+    rgba(30, 30, 60, 0.50) 40%,
+    rgba(20, 20, 40, 0.35) 70%,
     transparent 100%);
 }
 
-/* Dawn - Vibrant sunrise with warm glow
+/* Dawn - Sunrise with visible horizon glow and sky gradient
    Metaphor: The spark moment when trends ignite */
 body[data-scene="dawn"]::before {
   background:
-    /* Top warm glow */
-    radial-gradient(ellipse 1200px 500px at 50% 0%, rgba(255, 100, 80, 0.18) 0%, transparent 60%),
-    /* Mid purple-pink transition */
-    radial-gradient(ellipse 1400px 700px at 50% 30%, rgba(180, 80, 150, 0.15) 0%, rgba(120, 60, 120, 0.10) 50%, transparent 80%),
-    /* Bottom golden warmth */
+    /* Bright sun on horizon - concentrated glow */
+    radial-gradient(ellipse 800px 300px at 50% 85%, rgba(255, 180, 80, 0.70) 0%, rgba(255, 140, 60, 0.45) 30%, rgba(255, 100, 80, 0.25) 60%, transparent 100%),
+    /* Warm orange sky spreading from horizon */
+    radial-gradient(ellipse 1600px 700px at 50% 80%, rgba(255, 120, 60, 0.50) 0%, rgba(240, 100, 80, 0.35) 40%, transparent 75%),
+    /* Purple-pink upper atmosphere */
+    radial-gradient(ellipse 2000px 900px at 50% 20%, rgba(180, 80, 140, 0.42) 0%, rgba(140, 60, 120, 0.28) 50%, transparent 85%),
+    /* Deep purple night sky at top */
     linear-gradient(180deg,
-      rgba(80, 50, 100, 0.25) 0%,
-      rgba(60, 40, 80, 0.18) 30%,
-      rgba(40, 30, 60, 0.12) 60%,
+      rgba(60, 30, 80, 0.55) 0%,
+      rgba(80, 40, 100, 0.45) 20%,
+      rgba(120, 60, 100, 0.35) 50%,
       transparent 100%);
 }
 
@@ -242,61 +270,116 @@ body[data-scene="dawn"]::before {
 body[data-scene="orbit"]::before {
   background:
     /* Central "sun" - the gravitational center of viral trends */
-    radial-gradient(circle 120px at 50% 50%, rgba(255, 200, 100, 0.15) 0%, rgba(255, 150, 80, 0.08) 40%, transparent 100%),
+    radial-gradient(circle 120px at 50% 50%, rgba(255, 200, 100, 0.35) 0%, rgba(255, 150, 80, 0.20) 40%, transparent 100%),
     /* Inner orbital glow */
-    radial-gradient(circle 300px at 50% 50%, rgba(255, 100, 150, 0.06) 60%, transparent 100%),
+    radial-gradient(circle 300px at 50% 50%, rgba(255, 100, 150, 0.18) 60%, transparent 100%),
     /* Outer space nebula */
-    radial-gradient(ellipse 1400px 900px at 50% 50%, rgba(100, 150, 255, 0.10) 0%, rgba(80, 120, 200, 0.06) 40%, transparent 80%),
+    radial-gradient(ellipse 1400px 900px at 50% 50%, rgba(100, 150, 255, 0.25) 0%, rgba(80, 120, 200, 0.15) 40%, transparent 80%),
     /* Deep space purple */
-    radial-gradient(ellipse 1600px 1000px at 50% 50%, rgba(50, 50, 120, 0.20) 0%, rgba(30, 30, 80, 0.12) 60%, transparent 100%);
+    radial-gradient(ellipse 1600px 1000px at 50% 50%, rgba(50, 50, 120, 0.40) 0%, rgba(30, 30, 80, 0.28) 60%, transparent 100%);
 }
 
-/* City - Neon-lit urban sprawl
+/* City - Night sky atmosphere (SVG handles buildings)
    Metaphor: Communities form like city districts with distinct cultures */
 body[data-scene="city"]::before {
   background:
-    /* Cyan neon highlights */
-    radial-gradient(circle 500px at 20% 40%, rgba(0, 200, 255, 0.12) 0%, transparent 60%),
-    radial-gradient(circle 400px at 80% 70%, rgba(100, 255, 200, 0.10) 0%, transparent 55%),
-    /* Magenta accent glow */
-    radial-gradient(circle 350px at 60% 20%, rgba(255, 80, 200, 0.08) 0%, transparent 50%),
-    /* Urban blue atmosphere */
+    /* Distant city glow on horizon - moderate */
+    radial-gradient(ellipse 1100px 320px at 50% 75%, rgba(255, 140, 60, 0.22) 0%, rgba(255, 120, 65, 0.14) 40%, rgba(255, 100, 50, 0.08) 70%, transparent 90%),
+    /* Many more stars scattered across sky */
+    radial-gradient(circle 3px at 8% 12%, rgba(255, 255, 255, 0.95) 0%, transparent 100%),
+    radial-gradient(circle 2px at 15% 22%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+    radial-gradient(circle 3px at 22% 8%, rgba(255, 255, 255, 1.0) 0%, transparent 100%),
+    radial-gradient(circle 2px at 28% 32%, rgba(255, 255, 255, 0.75) 0%, transparent 100%),
+    radial-gradient(circle 3px at 35% 15%, rgba(255, 255, 255, 0.9) 0%, transparent 100%),
+    radial-gradient(circle 2px at 42% 28%, rgba(255, 255, 255, 0.85) 0%, transparent 100%),
+    radial-gradient(circle 3px at 48% 18%, rgba(255, 255, 255, 0.95) 0%, transparent 100%),
+    radial-gradient(circle 2px at 55% 38%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+    radial-gradient(circle 3px at 62% 12%, rgba(255, 255, 255, 1.0) 0%, transparent 100%),
+    radial-gradient(circle 2px at 68% 35%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+    radial-gradient(circle 3px at 75% 22%, rgba(255, 255, 255, 0.9) 0%, transparent 100%),
+    radial-gradient(circle 2px at 82% 48%, rgba(255, 255, 255, 0.75) 0%, transparent 100%),
+    radial-gradient(circle 2px at 88% 28%, rgba(255, 255, 255, 0.85) 0%, transparent 100%),
+    radial-gradient(circle 3px at 95% 18%, rgba(255, 255, 255, 0.95) 0%, transparent 100%),
+    radial-gradient(circle 2px at 12% 48%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+    radial-gradient(circle 2px at 18% 58%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+    radial-gradient(circle 3px at 38% 52%, rgba(255, 255, 255, 0.85) 0%, transparent 100%),
+    radial-gradient(circle 2px at 52% 58%, rgba(255, 255, 255, 0.75) 0%, transparent 100%),
+    radial-gradient(circle 3px at 65% 55%, rgba(255, 255, 255, 0.9) 0%, transparent 100%),
+    radial-gradient(circle 2px at 78% 62%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+    radial-gradient(circle 2px at 92% 58%, rgba(255, 255, 255, 0.85) 0%, transparent 100%),
+    /* Night sky gradient */
     linear-gradient(180deg,
-      rgba(20, 40, 60, 0.28) 0%,
-      rgba(25, 45, 65, 0.20) 40%,
-      rgba(18, 35, 50, 0.15) 80%,
-      transparent 100%);
+      rgba(4, 12, 24, 0.85) 0%,
+      rgba(8, 24, 42, 0.75) 30%,
+      rgba(12, 32, 52, 0.70) 60%,
+      rgba(16, 40, 60, 0.65) 100%);
 }
 
-/* Forest - Organic green overlay */
+/* Forest - Atmospheric base (SVG handles trees)
+   Metaphor: Trends fade like leaves, but forests regrow */
 body[data-scene="forest"]::before {
   background:
-    radial-gradient(ellipse 1000px 600px at 50% 0%, rgba(40, 80, 50, 0.25) 0%, transparent 60%),
+    /* Strong sun rays through trees - more prominent */
+    radial-gradient(ellipse 900px 700px at 30% 70%, rgba(255, 235, 160, 0.35) 0%, rgba(255, 225, 140, 0.18) 40%, transparent 70%),
+    radial-gradient(ellipse 600px 500px at 50% 68%, rgba(255, 240, 180, 0.22) 0%, rgba(255, 230, 160, 0.10) 45%, transparent 65%),
+    /* More dappled light patches throughout forest */
+    radial-gradient(circle 350px at 70% 75%, rgba(210, 255, 190, 0.22) 0%, transparent 65%),
+    radial-gradient(circle 280px at 15% 80%, rgba(190, 245, 170, 0.18) 0%, transparent 55%),
+    radial-gradient(circle 220px at 85% 78%, rgba(225, 255, 205, 0.14) 0%, transparent 50%),
+    radial-gradient(circle 200px at 40% 72%, rgba(200, 250, 180, 0.12) 0%, transparent 55%),
+    radial-gradient(circle 180px at 92% 85%, rgba(215, 255, 195, 0.10) 0%, transparent 50%),
+    /* Atmospheric depth */
     linear-gradient(180deg,
-      rgba(15, 30, 20, 0.4) 0%,
-      rgba(20, 35, 25, 0.3) 40%,
-      rgba(12, 25, 18, 0.2) 80%,
-      transparent 100%);
+      rgba(25, 60, 35, 0.90) 0%,
+      rgba(18, 50, 28, 0.85) 20%,
+      rgba(25, 65, 38, 0.75) 50%,
+      rgba(32, 80, 48, 0.65) 100%);
 }
 
-/* Air (Emotion) - Multicolor emotional atmosphere with flowing gradients */
+/* Air (Emotion) - Vibrant multicolor emotional atmosphere */
 body[data-scene="air"]::before {
   background:
-    radial-gradient(circle 600px at 20% 30%, rgba(255, 100, 150, 0.15) 0%, transparent 50%),
-    radial-gradient(circle 800px at 75% 60%, rgba(100, 150, 255, 0.12) 0%, transparent 50%),
-    radial-gradient(circle 500px at 50% 80%, rgba(150, 255, 200, 0.10) 0%, transparent 50%),
-    radial-gradient(ellipse 1200px 400px at 50% 40%, rgba(255, 200, 100, 0.08) 0%, transparent 60%),
+    /* Flowing wave patterns for visual interest */
+    radial-gradient(ellipse 1000px 200px at 0% 40%, rgba(255, 140, 180, 0.15) 0%, rgba(255, 120, 160, 0.08) 50%, transparent 70%),
+    radial-gradient(ellipse 900px 180px at 100% 60%, rgba(160, 200, 255, 0.12) 0%, rgba(140, 180, 235, 0.06) 50%, transparent 65%),
+    radial-gradient(ellipse 1100px 220px at 50% 80%, rgba(180, 255, 200, 0.10) 0%, rgba(160, 235, 180, 0.05) 50%, transparent 60%),
+    /* Concentric rings for depth */
+    radial-gradient(circle 600px at 30% 35%, transparent 30%, rgba(255, 160, 200, 0.08) 35%, transparent 40%),
+    radial-gradient(circle 450px at 70% 50%, transparent 35%, rgba(180, 210, 255, 0.07) 40%, transparent 45%),
+    /* Pink joy */
+    radial-gradient(circle 700px at 20% 30%, rgba(255, 120, 170, 0.32) 0%, rgba(255, 100, 150, 0.18) 50%, transparent 65%),
+    /* Blue calm */
+    radial-gradient(circle 900px at 75% 60%, rgba(120, 170, 255, 0.28) 0%, rgba(100, 150, 230, 0.15) 50%, transparent 65%),
+    /* Green energy */
+    radial-gradient(circle 600px at 50% 80%, rgba(170, 255, 220, 0.25) 0%, rgba(150, 230, 200, 0.12) 50%, transparent 60%),
+    /* Warm glow */
+    radial-gradient(ellipse 1400px 500px at 50% 40%, rgba(255, 200, 120, 0.20) 0%, rgba(255, 180, 100, 0.10) 40%, transparent 70%),
+    /* Base gradient */
     linear-gradient(135deg,
-      rgba(30, 25, 35, 0.4) 0%,
-      rgba(25, 30, 40, 0.3) 50%,
-      rgba(20, 25, 30, 0.2) 100%);
+      rgba(40, 35, 50, 0.55) 0%,
+      rgba(35, 40, 55, 0.42) 50%,
+      rgba(30, 35, 45, 0.35) 100%);
 }
 
-/* Lab - Structured grid-like */
+/* Lab - Atmospheric base (SVG handles equipment)
+   Metaphor: The formula - recipe ingredients analysis */
 body[data-scene="lab"]::before {
   background:
-    linear-gradient(135deg, rgba(20, 20, 30, 0.3) 0%, rgba(25, 25, 35, 0.2) 50%, transparent 100%),
-    linear-gradient(45deg, transparent 40%, rgba(26, 26, 46, 0.1) 50%, transparent 60%);
+    /* Subtle molecular orbital rings - elegant and scientific */
+    radial-gradient(circle 500px at 75% 25%, transparent 35%, rgba(80, 180, 220, 0.04) 37%, transparent 39%),
+    radial-gradient(circle 400px at 75% 25%, transparent 40%, rgba(100, 200, 240, 0.05) 42%, transparent 44%),
+    radial-gradient(circle 300px at 75% 25%, transparent 45%, rgba(120, 220, 255, 0.06) 47%, transparent 49%),
+    /* Soft glowing light from lab equipment */
+    radial-gradient(circle 450px at 20% 45%, rgba(80, 200, 240, 0.15) 0%, rgba(60, 180, 220, 0.08) 50%, transparent 70%),
+    radial-gradient(circle 350px at 85% 70%, rgba(100, 220, 200, 0.12) 0%, rgba(80, 200, 180, 0.06) 50%, transparent 65%),
+    /* Overhead cool lab lighting */
+    radial-gradient(ellipse 800px 400px at 50% 0%, rgba(200, 230, 250, 0.20) 0%, rgba(180, 210, 230, 0.10) 50%, transparent 80%),
+    /* Clean scientific atmosphere */
+    linear-gradient(180deg,
+      rgba(15, 40, 55, 0.90) 0%,
+      rgba(18, 50, 65, 0.85) 30%,
+      rgba(20, 55, 70, 0.80) 60%,
+      rgba(22, 60, 75, 0.75) 100%);
 }
 
 /* Scene layers - decorative overlays per scene */
@@ -839,9 +922,9 @@ body[data-scene="air"] .scene--bubbles {
 .emotion-legend {
   list-style: none;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2) var(--space-3);
 }
 
 /* Detail Drawer */
@@ -935,13 +1018,25 @@ body[data-scene="air"] .scene--bubbles {
   margin-top: var(--space-6);
 }
 
-/* Footer */
+/* Footer - merged with lab bench appearance */
 .site-footer {
   text-align: center;
-  padding: var(--space-7) 0;
-  border-top: var(--glass-subtle-border);
-  margin-top: var(--space-8);
+  padding: var(--space-5) 0;
+  padding-bottom: var(--space-5);
+  border-top: none; /* No border - seamless merge with lab bench */
+  margin-top: -5px !important; /* Eliminate gap completely */
   color: var(--color-text-secondary);
+  /* Match lab bench color and fade to black */
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(180deg,
+    #0b1116 0%,                     /* Exact lab bench color match */
+    #0b1116 5%,                     /* Hold bench color briefly */
+    rgba(8, 12, 15, 1) 20%,
+    rgba(5, 8, 10, 1) 40%,
+    #000000 65%,
+    #000000 100%
+  );
 }
 
 .site-footer a {
@@ -1772,5 +1867,713 @@ circle[data-type="bubble"] {
 
   .quiz-content {
     padding: var(--space-4);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Scene Illustrations (SVG overlays)
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Shared base */
+.illu {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 400px;
+  pointer-events: none;
+  opacity: 0;
+  animation: illuFadeIn 800ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  z-index: 1; /* Above body::before, same layer as scene decorations */
+}
+
+@keyframes illuFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   FOREST
+   ────────────────────────────────────────────────────────────────────── */
+
+.illu-forest .forest-ridge {
+  /* Use gradient from SVG for 3D depth effect */
+  opacity: 0.85; /* Increased from 0.6 for visibility */
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.15)); /* Subtle shadow */
+}
+
+.illu-forest .forest-ground {
+  fill: #0b1f17;
+  opacity: 0.9; /* Increased for more solidity */
+}
+
+.illu-forest .forest-bush {
+  /* Use gradient from SVG for 3D depth */
+  opacity: 0.85; /* Increased for definition */
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15)); /* Subtle shadow */
+}
+
+.illu-forest .leaf {
+  /* Use gradient from SVG for 3D lighting effect */
+  stroke: rgba(20, 100, 70, 0.6); /* Stronger stroke for depth */
+  stroke-width: 0.8;
+}
+
+.illu-forest .trunk {
+  /* Use gradient from SVG for cylindrical 3D effect */
+  stroke: #2a3632;
+  stroke-width: 1.5; /* Thicker outline for definition */
+}
+
+.illu-forest .forest-cloud {
+  fill: #d0e0d8;
+  opacity: 0.45; /* Slightly more visible */
+}
+
+.illu-forest .forest-bird {
+  fill: none;
+  stroke: #1a3a2a;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.7; /* More visible */
+  animation: birdFly 6s ease-in-out infinite;
+}
+
+@keyframes birdFly {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(40px) translateY(-15px);
+  }
+  50% {
+    transform: translateX(80px) translateY(-5px);
+  }
+  75% {
+    transform: translateX(120px) translateY(-20px);
+  }
+}
+
+.illu-forest .forest-mountains {
+  /* Use gradient from SVG for 3D depth effect */
+  opacity: 0.75; /* Increased from 0.4 for much better visibility */
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2)); /* Moderate shadow */
+}
+
+.pine.sway {
+  transform-origin: 50% 100%;
+  animation: sway 4.5s ease-in-out infinite alternate;
+  filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.2)); /* Subtle shadow */
+}
+
+@keyframes sway {
+  from { transform: rotate(-1.2deg); }
+  to { transform: rotate(1.2deg); }
+}
+
+/* Easter egg: falling leaf */
+@keyframes leafFall {
+  from {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(40px) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+@keyframes leafFadeOnly {
+  0%, 50% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pine.sway {
+    animation: none;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   CITY
+   ────────────────────────────────────────────────────────────────────── */
+
+.illu-city .bldg {
+  fill: #0e1722;
+  opacity: 0.9;
+}
+
+.illu-city .win {
+  fill: #f7f3c8;
+  opacity: 0;
+}
+
+.illu-city .twinkle {
+  animation: tw 2.4s ease-in-out infinite;
+}
+
+@keyframes tw {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.9; }
+}
+
+.illu-city .city-ground {
+  fill: #0a0d12;
+}
+
+/* Easter egg: beacon pulse */
+@keyframes beaconPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+.illu-city .city-antenna {
+  stroke: #3a4a52;
+  stroke-width: 2;
+  opacity: 0.8;
+}
+
+.illu-city .city-antenna-light {
+  fill: #ff3030;
+  opacity: 0.9;
+  animation: antennaBlinkSlow 2s ease-in-out infinite;
+}
+
+@keyframes antennaBlinkSlow {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.3; }
+}
+
+/* Diagonal shooting stars - MORE VISIBLE */
+.illu-city .city-meteor {
+  opacity: 0;
+  animation: meteorStreak 4s ease-out infinite; /* Faster cycle */
+}
+
+@keyframes meteorStreak {
+  0%, 75%, 100% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  3% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+    transform: translate(150px, 100px); /* Longer diagonal streak */
+  }
+}
+
+/* Sparkling effect for meteor trail points */
+.illu-city .meteor-trail-sparkle {
+  animation: meteorTrailSparkle 0.8s ease-in-out infinite;
+}
+
+@keyframes meteorTrailSparkle {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.6);
+  }
+}
+
+/* Sparkling effect for meteor head */
+.illu-city .meteor-head-sparkle {
+  animation: meteorHeadSparkle 1s ease-in-out infinite;
+}
+
+@keyframes meteorHeadSparkle {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 1));
+  }
+}
+
+/* White pulse for meteor glow */
+.illu-city .meteor-glow-sparkle {
+  animation: meteorGlowSparkle 1.5s ease-in-out infinite;
+}
+
+@keyframes meteorGlowSparkle {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.9;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .illu-city .twinkle,
+  .illu-city .city-neon,
+  .illu-city .city-antenna-light,
+  .illu-city .city-meteor,
+  .illu-city .meteor-trail-sparkle,
+  .illu-city .meteor-head-sparkle,
+  .illu-city .meteor-glow-sparkle {
+    animation: none;
+  }
+  .illu-city .twinkle {
+    opacity: 0.5;
+  }
+  .illu-city .city-meteor {
+    opacity: 0;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   LAB - Realistic chemistry lab with parallax
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Ceramic tile wall with animated green vertical stripes (user's favorite!) */
+.illu-lab .lab-wall {
+  fill: url(#labTiles);
+}
+
+.illu-lab .lab-tile-v {
+  animation: stripeShift 3s ease-in-out infinite;
+}
+
+@keyframes stripeShift {
+  0%, 100% {
+    opacity: 0.08;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.15;
+    transform: translateX(1px);
+  }
+}
+
+/* Shelf and glassware */
+.illu-lab .lab-shelf {
+  fill: url(#shelfGrad);
+}
+
+.illu-lab .lab-flask {
+  transition: fill 0.3s ease;
+}
+
+.illu-lab .lab-tube {
+  transition: fill 0.3s ease;
+}
+
+/* Beaker glass with highlight */
+.illu-lab .lab-rim {
+  fill: rgba(255,255,255,0.25);
+}
+
+.illu-lab .lab-glass {
+  fill: rgba(255,255,255,0.06);
+  stroke: rgba(160,210,255,0.45);
+  mask: url(#glassSpec);
+}
+
+/* Liquid inside beaker */
+.illu-lab .lab-liquid {
+  fill: rgba(0, 255, 224, 0.24);
+  stroke: rgba(0, 255, 224, 0.4);
+}
+
+/* Rising bubbles */
+.illu-lab .lab-bubble {
+  fill: rgba(160, 210, 255, 0.95);
+  animation: rise 2.8s ease-in infinite;
+}
+
+/* Burner flame - opacity flicker only */
+.illu-lab .lab-flame {
+  fill: rgba(255, 196, 64, 0.85);
+  animation: flameFlicker 1.2s ease-in-out infinite;
+}
+
+@keyframes flameFlicker {
+  0%, 100% {
+    opacity: 0.85;
+  }
+  25% {
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.75;
+  }
+  75% {
+    opacity: 0.9;
+  }
+}
+
+/* Animated green stripes - USER'S FAVORITE! */
+.illu-lab .lab-stripe {
+  animation: stripeGlow 3s ease-in-out infinite;
+}
+
+@keyframes stripeGlow {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.35;
+    fill: rgba(0, 255, 180, 0.35);
+  }
+}
+
+/* Glowing liquid */
+.illu-lab .lab-liquid-glow {
+  animation: liquidPulse 2s ease-in-out infinite;
+}
+
+@keyframes liquidPulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* Microscope light beam animation */
+.illu-lab .lab-micro-light {
+  animation: microBeamPulse 2s ease-in-out infinite;
+}
+
+@keyframes microBeamPulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+
+/* Molecular structures */
+.illu-lab .lab-molecule {
+  animation: moleculeFloat 8s ease-in-out infinite;
+}
+
+.illu-lab .lab-atom-center {
+  fill: #4db8ff;
+  stroke: #2d98df;
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+.illu-lab .lab-atom {
+  fill: #6dcbff;
+  stroke: #4db8ff;
+  stroke-width: 1.5;
+  opacity: 0.85;
+}
+
+.illu-lab .lab-bond {
+  stroke: #5ac3ff;
+  stroke-width: 2;
+  opacity: 0.7;
+}
+
+@keyframes moleculeFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(5deg);
+  }
+}
+
+/* DNA Helix */
+.illu-lab .lab-dna {
+  opacity: 0.7;
+}
+
+.illu-lab .lab-dna-spine {
+  fill: #40c0e0;
+  opacity: 0.9;
+}
+
+.illu-lab .lab-dna-pair {
+  stroke: #60d0f0;
+  stroke-width: 2;
+  opacity: 0.6;
+}
+
+/* Microscope */
+.illu-lab .lab-micro-base {
+  fill: #2a3842;
+  stroke: #3a4852;
+  stroke-width: 1;
+}
+
+.illu-lab .lab-micro-stand,
+.illu-lab .lab-micro-tube {
+  fill: #3a4a56;
+  stroke: #4a5a66;
+  stroke-width: 1.5;
+}
+
+.illu-lab .lab-micro-stage {
+  fill: #4a5a66;
+  opacity: 0.9;
+}
+
+.illu-lab .lab-micro-eye,
+.illu-lab .lab-micro-lens {
+  fill: #1a2a36;
+  stroke: #5ac3ff;
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+.illu-lab .lab-light-beam {
+  fill: #ffeb99;
+  opacity: 0.4;
+  filter: blur(2px);
+  animation: beamPulse 2s ease-in-out infinite;
+}
+
+@keyframes beamPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+/* Energy particles */
+.illu-lab .lab-particle {
+  fill: #80e0ff;
+  opacity: 0.8;
+  animation: particleDrift 4s ease-in-out infinite;
+}
+
+@keyframes particleDrift {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-20px);
+    opacity: 0.4;
+  }
+}
+
+/* Petri dish */
+.illu-lab .lab-petri {
+  fill: rgba(180, 220, 240, 0.15);
+  stroke: #90c8e0;
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+.illu-lab .lab-colony {
+  fill: #ff9080;
+  opacity: 0.7;
+}
+
+/* Spectrum analyzer */
+.illu-lab .lab-spectrum {
+  fill: #4de0a0;
+  opacity: 0.75;
+  animation: spectrumPulse 2s ease-in-out infinite;
+}
+
+@keyframes spectrumPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scaleY(0.8);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scaleY(1.1);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.95;
+  }
+  to {
+    transform: translateY(-80px);
+    opacity: 0;
+  }
+}
+
+@keyframes labShimmer {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scaleX(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .illu-lab .lab-bubble,
+  .illu-lab .lab-flame,
+  .illu-lab .lab-tile-v,
+  .illu-lab .lab-molecule,
+  .illu-lab .lab-light-beam,
+  .illu-lab .lab-particle,
+  .illu-lab .lab-spectrum {
+    animation: none;
+  }
+  .illu-lab .lab-bubble {
+    opacity: 0.5;
+  }
+  .illu-lab .lab-flame {
+    opacity: 0.7;
+  }
+  .illu-lab .lab-tile-v {
+    opacity: 0.08;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Air (Emotion) SVG - Floating emotion elements
+   ────────────────────────────────────────────────────────────────────── */
+
+.illu-air {
+  opacity: 1.0; /* Full opacity so elements are visible */
+  z-index: 10 !important; /* ABOVE visualization */
+  position: absolute !important;
+  top: 0 !important; /* At the very top of section */
+  height: 150px !important; /* Only top portion */
+}
+
+/* Floating hearts */
+.illu-air .air-heart {
+  animation: floatHeart 8s ease-in-out infinite;
+  opacity: 0.9 !important; /* Ensure hearts are very visible */
+}
+
+@keyframes floatHeart {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-30px) rotate(10deg);
+    opacity: 0.9;
+  }
+}
+
+/* Musical notes */
+.illu-air .air-note {
+  animation: floatNote 6s ease-in-out infinite;
+  opacity: 0.85 !important; /* Much more visible */
+}
+
+@keyframes floatNote {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  33% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  66% {
+    transform: translateY(-10px) translateX(-10px);
+  }
+}
+
+/* Breath ripples */
+.illu-air .air-breath {
+  opacity: 0.8 !important;
+}
+
+.illu-air .air-breath circle {
+  animation: breathExpand 4s ease-out infinite;
+  stroke-opacity: 0.7;
+}
+
+@keyframes breathExpand {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Floating leaves - transition from forest */
+.illu-air .air-leaf {
+  animation: leafDrift 10s ease-in-out infinite;
+  opacity: 0.75 !important; /* More visible */
+}
+
+@keyframes leafDrift {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-15px) translateX(20px) rotate(45deg);
+  }
+  50% {
+    transform: translateY(-25px) translateX(0px) rotate(90deg);
+  }
+  75% {
+    transform: translateY(-15px) translateX(-20px) rotate(135deg);
+  }
+}
+
+/* Energy flow lines */
+.illu-air .air-flow {
+  animation: energyPulse 5s ease-in-out infinite;
+  stroke-dasharray: 10 5;
+  stroke-dashoffset: 0;
+  opacity: 0.6 !important; /* Much more visible */
+}
+
+@keyframes energyPulse {
+  0%, 100% {
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dashoffset: -30;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .illu-air .air-heart,
+  .illu-air .air-note,
+  .illu-air .air-breath circle,
+  .illu-air .air-leaf,
+  .illu-air .air-flow {
+    animation: none;
+  }
+  .illu-air .air-heart {
+    opacity: 0.9 !important;
+  }
+  .illu-air .air-note {
+    opacity: 0.85 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .illu-forest .forest-bird {
+    animation: none;
   }
 }

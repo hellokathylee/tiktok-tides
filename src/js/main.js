@@ -9,6 +9,7 @@ import { RankingViz } from '../vizzes/ranking/index.js';
 import { EmotionViz } from '../vizzes/emotion/index.js';
 import { IngredientsViz } from '../vizzes/ingredients/index.js';
 import { initMicroInteractions } from './micro-interactions.js';
+import { installIllustrations } from '../illustrations/index.js';
 
 // Scene mapping for semantic worlds
 const SCENE_MAP = {
@@ -700,6 +701,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // TASK 1 - Ensure scene layers exist
   ensureSceneLayers();
+
+  // Initialize scene illustrations
+  installIllustrations();
 
   // Initialize main app
   window.app = new TikTokTidesApp();
