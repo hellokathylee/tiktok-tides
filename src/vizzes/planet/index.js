@@ -1,4 +1,3 @@
-// Planet Visualization Adapter - Simplified MVP version
 import { EventEmitter, prefersReducedMotion } from '../shared/utils.js';
 import { VIZ_EVENTS, DEFAULT_OPTIONS } from '../shared/types.js';
 
@@ -18,6 +17,7 @@ export class PlanetViz extends EventEmitter {
     this.options = { ...DEFAULT_OPTIONS };
     this.mounted = false;
     this.svg = null;
+    this.tooltip = null;
     this.animationRunning = true;
     this.startTime = Date.now();
   }
@@ -32,44 +32,89 @@ export class PlanetViz extends EventEmitter {
 
     this.options = { ...this.options, ...options };
 
-    // Load mock data for MVP
     await this.loadData();
     this.emit(VIZ_EVENTS.DATA_READY);
   }
 
   async loadData() {
-    // Mock data for artists as planets
-    this.data = {
-      '2019': [
-        { name: 'Lil Nas X', songCount: 8, avgDanceability: 0.85, avgEnergy: 0.72 },
-        { name: 'Billie Eilish', songCount: 12, avgDanceability: 0.67, avgEnergy: 0.45 },
-        { name: 'Post Malone', songCount: 6, avgDanceability: 0.72, avgEnergy: 0.58 },
-        { name: 'Lizzo', songCount: 5, avgDanceability: 0.89, avgEnergy: 0.81 }
-      ],
-      '2020': [
-        { name: 'Doja Cat', songCount: 10, avgDanceability: 0.82, avgEnergy: 0.69 },
-        { name: 'Megan Thee Stallion', songCount: 7, avgDanceability: 0.91, avgEnergy: 0.85 },
-        { name: 'DaBaby', songCount: 8, avgDanceability: 0.78, avgEnergy: 0.73 },
-        { name: 'Roddy Ricch', songCount: 6, avgDanceability: 0.65, avgEnergy: 0.52 }
-      ],
-      '2021': [
-        { name: 'Olivia Rodrigo', songCount: 11, avgDanceability: 0.58, avgEnergy: 0.62 },
-        { name: 'Dua Lipa', songCount: 9, avgDanceability: 0.76, avgEnergy: 0.71 },
-        { name: 'The Weeknd', songCount: 7, avgDanceability: 0.69, avgEnergy: 0.58 },
-        { name: 'Ariana Grande', songCount: 8, avgDanceability: 0.73, avgEnergy: 0.65 }
-      ],
-      '2022': [
-        { name: 'Glass Animals', songCount: 6, avgDanceability: 0.71, avgEnergy: 0.55 },
-        { name: 'Kate Bush', songCount: 4, avgDanceability: 0.52, avgEnergy: 0.48 },
-        { name: 'Steve Lacy', songCount: 5, avgDanceability: 0.78, avgEnergy: 0.61 },
-        { name: 'Jack Harlow', songCount: 7, avgDanceability: 0.81, avgEnergy: 0.74 }
-      ]
-    };
+    try {
+      const [data2019, data2020, data2021, data2022] = await Promise.all([
+        d3.csv('/data/TikTok_songs_2019.csv'),
+        d3.csv('/data/TikTok_songs_2020.csv'),
+        d3.csv('/data/TikTok_songs_2021.csv'),
+        d3.csv('/data/TikTok_songs_2022.csv')
+      ]);
+
+      this.data = {
+        '2019': this.processData(data2019),
+        '2020': this.processData(data2020),
+        '2021': this.processData(data2021),
+        '2022': this.processData(data2022)
+      };
+    } catch (error) {
+      console.error('Error loading CSV data:', error);
+      throw error;
+    }
+  }
+
+  processData(data) {
+    const artistMap = new Map();
+    
+    data.forEach(song => {
+      const artist = song.artist_name;
+      const danceability = parseFloat(song.danceability);
+      const energy = parseFloat(song.energy);
+      
+      if (!artistMap.has(artist)) {
+        artistMap.set(artist, {
+          name: artist,
+          songs: [],
+          danceabilities: [],
+          energies: []
+        });
+      }
+      
+      const artistData = artistMap.get(artist);
+      artistData.songs.push(song.track_name);
+      artistData.danceabilities.push(danceability);
+      artistData.energies.push(energy);
+    });
+    
+    return Array.from(artistMap.values()).map(artist => ({
+      name: artist.name,
+      songCount: artist.songs.length,
+      avgDanceability: d3.mean(artist.danceabilities),
+      avgEnergy: d3.mean(artist.energies),
+      songs: artist.songs
+    }));
+  }
+
+  danceabilityToColor(danceability) {
+    const colors = [
+      { value: 0.0, color: '#FF0000' },  
+      { value: 0.15, color: '#FF7F00' }, 
+      { value: 0.3, color: '#FFFF00' },  
+      { value: 0.45, color: '#00FF00' }, 
+      { value: 0.6, color: '#00FFFF' },  
+      { value: 0.75, color: '#0000FF' }, 
+      { value: 0.9, color: '#8B00FF' },  
+      { value: 1.0, color: '#FF00FF' }   
+    ];
+    
+    for (let i = 0; i < colors.length - 1; i++) {
+      if (danceability >= colors[i].value && danceability <= colors[i + 1].value) {
+        const t = (danceability - colors[i].value) / (colors[i + 1].value - colors[i].value);
+        return d3.interpolateRgb(colors[i].color, colors[i + 1].color)(t);
+      }
+    }
+    
+    return colors[colors.length - 1].color;
   }
 
   mount() {
     if (this.mounted) return;
-    this.render();
+    this.createSolarSystem();
+    this.updateVisualization();
     this.setupYearButtons();
     this.mounted = true;
     this.emit(VIZ_EVENTS.ENTER_COMPLETE);
@@ -130,45 +175,63 @@ export class PlanetViz extends EventEmitter {
     return this.data !== null;
   }
 
-  render() {
-    const yearData = this.data[this.currentYear];
-    if (!yearData) return;
-
-    // Clear container
+  createSolarSystem() {
     this.container.innerHTML = '';
 
-    // Get dimensions
     const bbox = this.container.getBoundingClientRect();
     const width = bbox.width || 1200;
     const height = bbox.height || 800;
 
-    // Create SVG
     this.svg = d3.select(this.container)
       .append('svg')
+      .attr('width', '100%')
+      .attr('height', '100%')
       .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
       .attr('role', 'img')
       .attr('aria-label', 'Planet system visualization showing artists as gravitational centers');
 
-    // Add groups
     this.svg.append('g').attr('id', 'orbits');
     this.svg.append('g').attr('id', 'planets');
 
-    // Draw sun
+    const defs = this.svg.append('defs');
+    const sunGradient = defs.append('radialGradient')
+      .attr('id', 'sunGradient');
+    sunGradient.append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', '#FFD700');
+    sunGradient.append('stop')
+      .attr('offset', '50%')
+      .attr('stop-color', '#FFA500');
+    sunGradient.append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', '#FF8C00');
+
     this.svg.append('circle')
       .attr('class', 'sun')
       .attr('cx', width / 2)
       .attr('cy', height / 2)
       .attr('r', 40)
-      .attr('fill', 'var(--color-accent-yellow)')
-      .style('filter', 'var(--shadow-glow-yellow)');
+      .attr('fill', 'url(#sunGradient)');
 
-    // Update visualization
-    this.updateVisualization();
+    this.tooltip = d3.select('body').append('div')
+      .attr('class', 'tooltip-planet')
+      .style('opacity', 0)
+      .style('display', 'none')
+      .style('position', 'absolute')
+      .style('background', 'rgba(0, 0, 0, 0.9)')
+      .style('color', '#fff')
+      .style('padding', '10px')
+      .style('border-radius', '8px')
+      .style('border', '1px solid var(--color-accent-cyan)')
+      .style('pointer-events', 'none')
+      .style('z-index', '1000')
+      .style('font-size', '0.9rem');
   }
 
   updateVisualization() {
-    const yearData = this.data[this.currentYear];
-    if (!yearData) return;
+    const data = this.data[this.currentYear];
+    if (!data) return;
 
     const bbox = this.container.getBoundingClientRect();
     const width = bbox.width || 1200;
@@ -176,21 +239,19 @@ export class PlanetViz extends EventEmitter {
     const centerX = width / 2;
     const centerY = height / 2;
     const minRadius = 80;
-    const maxRadius = Math.min(width, height) / 2 - 100;
+    const maxRadius = 350;
 
-    // Scales
     const sizeScale = d3.scaleSqrt()
-      .domain([1, d3.max(yearData, d => d.songCount)])
-      .range([15, 50]);
+      .domain([1, d3.max(data, d => d.songCount)])
+      .range([8, 40]);
 
     const distanceScale = d3.scaleLinear()
       .domain([0, 1])
       .range([minRadius, maxRadius]);
 
-    const angleStep = (2 * Math.PI) / yearData.length;
+    const angleStep = (2 * Math.PI) / data.length;
 
-    // Prepare planet data
-    const planetsData = yearData.map((d, i) => {
+    const planetsData = data.map((d, i) => {
       const baseAngle = i * angleStep;
       const distance = distanceScale(d.avgEnergy);
       const orbitalSpeed = 0.00005 / (distance / 100);
@@ -205,7 +266,6 @@ export class PlanetViz extends EventEmitter {
       };
     });
 
-    // Draw orbits
     const orbits = this.svg.select('#orbits')
       .selectAll('.planet-orbit')
       .data(planetsData, d => d.name);
@@ -231,61 +291,91 @@ export class PlanetViz extends EventEmitter {
       .attr('r', 0)
       .remove();
 
-    // Draw planets
     const planets = this.svg.select('#planets')
       .selectAll('.planet')
       .data(planetsData, d => d.name);
 
-    const planetsEnter = planets.enter()
-      .append('g')
-      .attr('class', 'planet');
+    const tooltip = this.tooltip;
+    const self = this;
 
-    planetsEnter.append('circle')
-      .attr('cx', 0)
-      .attr('cy', 0)
+    const planetsEnter = planets.enter()
+      .append('circle')
+      .attr('class', 'planet')
+      .attr('cx', centerX)
+      .attr('cy', centerY)
       .attr('r', 0)
       .attr('fill', d => this.danceabilityToColor(d.avgDanceability))
-      .attr('stroke', 'var(--color-text-primary)')
-      .attr('stroke-width', 2);
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 2)
+      .on('mouseenter', function(event, d) {
+        d3.select(this).attr('data-original-r', sizeScale(d.songCount));
+        
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('stroke-width', 4)
+          .attr('r', sizeScale(d.songCount) * 1.2);
+        
+        tooltip
+          .style('display', 'block')
+          .transition()
+          .duration(200)
+          .style('opacity', 1);
+      })
+      .on('mousemove', function(event, d) {
+        tooltip
+          .html(`
+            <strong>${d.name}</strong>
+            <div>Songs: ${d.songCount}</div>
+            <div>Avg Danceability: ${d.avgDanceability.toFixed(2)}</div>
+            <div>Avg Energy: ${d.avgEnergy.toFixed(2)}</div>
+            <div style="margin-top: 5px; font-size: 0.8rem; color: #aaa;">
+              ${d.songs.slice(0, 3).join(', ')}${d.songs.length > 3 ? '...' : ''}
+            </div>
+          `)
+          .style('left', (event.pageX + 15) + 'px')
+          .style('top', (event.pageY - 15) + 'px');
+      })
+      .on('mouseleave', function(event, d) {
+        const originalR = d3.select(this).attr('data-original-r') || sizeScale(d.songCount);
+        
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('stroke-width', 2)
+          .attr('r', originalR);
+        
+        tooltip
+          .transition()
+          .duration(200)
+          .style('opacity', 0)
+          .on('end', function() {
+            d3.select(this).style('display', 'none');
+          });
+      });
 
-    planetsEnter.append('text')
-      .attr('text-anchor', 'middle')
-      .attr('dy', -5)
-      .style('fill', 'var(--color-text-primary)')
-      .style('font-size', 'var(--font-size-caption)')
-      .text(d => d.name);
-
-    const planetsUpdate = planetsEnter.merge(planets);
-
-    planetsUpdate
+    planetsEnter.merge(planets)
       .transition()
       .duration(1000)
-      .attr('transform', d => `translate(${d.x}, ${d.y})`);
-
-    planetsUpdate.select('circle')
-      .transition()
-      .duration(1000)
-      .attr('r', d => sizeScale(d.songCount));
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
+      .attr('r', d => sizeScale(d.songCount))
+      .attr('fill', d => this.danceabilityToColor(d.avgDanceability));
 
     planets.exit()
       .transition()
       .duration(500)
-      .attr('opacity', 0)
+      .attr('r', 0)
+      .attr('cx', centerX)
+      .attr('cy', centerY)
       .remove();
 
-    // Start animation if enabled
     if (this.animationRunning && !this.options.reducedMotion) {
-      this.animatePlanets(planetsData, centerX, centerY);
+      this.animatePlanets(planetsData, centerX, centerY, sizeScale);
     }
   }
 
-  danceabilityToColor(danceability) {
-    const scale = d3.scaleSequential(d3.interpolatePlasma)
-      .domain([0, 1]);
-    return scale(danceability);
-  }
-
-  animatePlanets(planetsData, centerX, centerY) {
+  animatePlanets(planetsData, centerX, centerY, sizeScale) {
     const animate = () => {
       if (!this.animationRunning) return;
 
@@ -294,11 +384,13 @@ export class PlanetViz extends EventEmitter {
       this.svg.select('#planets')
         .selectAll('.planet')
         .data(planetsData, d => d.name)
-        .attr('transform', d => {
+        .attr('cx', d => {
           const angle = d.baseAngle + (elapsed * d.orbitalSpeed);
-          const x = centerX + d.distance * Math.cos(angle);
-          const y = centerY + d.distance * Math.sin(angle);
-          return `translate(${x}, ${y})`;
+          return centerX + d.distance * Math.cos(angle);
+        })
+        .attr('cy', d => {
+          const angle = d.baseAngle + (elapsed * d.orbitalSpeed);
+          return centerY + d.distance * Math.sin(angle);
         });
 
       requestAnimationFrame(animate);
@@ -308,13 +400,11 @@ export class PlanetViz extends EventEmitter {
   }
 
   setupYearButtons() {
-    // Connect to year selector buttons in the DOM
     document.querySelectorAll('.year-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const year = e.target.dataset.year;
         this.switchYear(year);
 
-        // Update active state
         document.querySelectorAll('.year-btn').forEach(b => {
           b.classList.remove('active');
         });
@@ -335,11 +425,8 @@ export class PlanetViz extends EventEmitter {
     const yearData = this.data[this.currentYear];
     if (!yearData) return;
 
-    // Highlight top artists by song count
-    const top2 = yearData
-      .sort((a, b) => b.songCount - a.songCount)
-      .slice(0, 2)
-      .map(d => d.name);
+    const sorted = [...yearData].sort((a, b) => b.songCount - a.songCount);
+    const top2 = sorted.slice(0, 2).map(d => d.name);
 
     this.svg.selectAll('.planet')
       .transition()
@@ -348,7 +435,6 @@ export class PlanetViz extends EventEmitter {
   }
 
   fadeOrbits() {
-    // Transition effect for section change
     this.svg.selectAll('.planet-orbit')
       .transition()
       .duration(600)
