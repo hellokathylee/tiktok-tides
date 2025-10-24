@@ -1,0 +1,1255 @@
+/* Base Reset and Dark Theme */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: #0a0a0f; /* Ensure base dark background */
+}
+
+body {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-body-reg);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  background: #0a0a0f; /* Dark base - merged from line 201 */
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: var(--font-size-h1); }
+h2 { font-size: var(--font-size-h2); }
+h3 { font-size: var(--font-size-h3); }
+
+.hero-title {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.lead {
+  font-size: var(--font-size-body-lg);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-magenta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.highlight-cyan {
+  color: var(--color-accent-cyan);
+  font-weight: var(--font-weight-semibold);
+}
+
+.highlight-magenta {
+  color: var(--color-accent-magenta);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-accent-cyan);
+  color: var(--color-background-primary);
+  padding: var(--space-2) var(--space-4);
+  text-decoration: none;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Navigation */
+.nav-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--glass-standard-background);
+  backdrop-filter: blur(var(--glass-standard-blur));
+  border-bottom: var(--glass-standard-border);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+}
+
+.nav-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-title {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: var(--space-5);
+}
+
+.nav-links a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color var(--duration-micro) var(--easing-standard);
+}
+
+.nav-links a:hover,
+.nav-links a[aria-current="true"] {
+  color: var(--color-accent-cyan);
+}
+
+/* Progress Bar */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-magenta));
+  width: 0%;
+  z-index: 9999;
+  transition: width 100ms ease-out;
+}
+
+/* Sections - Transparent to show body::before scene backgrounds */
+.section {
+  min-height: 100vh;
+  position: relative;
+  padding: var(--space-8) 0;
+  background: transparent; /* Let scene backgrounds show through */
+  z-index: 1; /* Above body::before background layer */
+}
+
+.section-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+  width: 100%;
+  height: 100%;
+}
+
+.section-annotations {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+}
+
+/* Semantic Backgrounds - Scene-based */
+:root {
+  --accent-cyan: #00FFE0;
+  --accent-magenta: #FF00E0;
+  --gold: #FFEB3B;
+}
+
+/* Scene Background System - Smooth, Creative Transitions */
+
+/* Fixed scene background layer - smooth cross-fade between scenes */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0; /* Changed from -1 to work with section stacking context */
+  transition: opacity 500ms cubic-bezier(0.4, 0.0, 0.2, 1),
+              background 500ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  opacity: 1;
+  will-change: background;
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+/* Cosmos - Deep space with subtle purple */
+body[data-scene="cosmos"]::before {
+  background: radial-gradient(ellipse 1400px 900px at 50% 30%,
+    rgba(30, 30, 60, 0.4) 0%,
+    rgba(20, 20, 40, 0.3) 40%,
+    rgba(10, 10, 15, 0.2) 70%,
+    transparent 100%);
+}
+
+/* Dawn - Vibrant sunrise with warm glow
+   Metaphor: The spark moment when trends ignite */
+body[data-scene="dawn"]::before {
+  background:
+    /* Top warm glow */
+    radial-gradient(ellipse 1200px 500px at 50% 0%, rgba(255, 100, 80, 0.18) 0%, transparent 60%),
+    /* Mid purple-pink transition */
+    radial-gradient(ellipse 1400px 700px at 50% 30%, rgba(180, 80, 150, 0.15) 0%, rgba(120, 60, 120, 0.10) 50%, transparent 80%),
+    /* Bottom golden warmth */
+    linear-gradient(180deg,
+      rgba(80, 50, 100, 0.25) 0%,
+      rgba(60, 40, 80, 0.18) 30%,
+      rgba(40, 30, 60, 0.12) 60%,
+      transparent 100%);
+}
+
+/* Orbit (Surge) - Planet system with gravitational center and orbital rings
+   Metaphor: Artists as planets pulling content into their orbit */
+body[data-scene="orbit"]::before {
+  background:
+    /* Central "sun" - the gravitational center of viral trends */
+    radial-gradient(circle 120px at 50% 50%, rgba(255, 200, 100, 0.15) 0%, rgba(255, 150, 80, 0.08) 40%, transparent 100%),
+    /* Inner orbital glow */
+    radial-gradient(circle 300px at 50% 50%, rgba(255, 100, 150, 0.06) 60%, transparent 100%),
+    /* Outer space nebula */
+    radial-gradient(ellipse 1400px 900px at 50% 50%, rgba(100, 150, 255, 0.10) 0%, rgba(80, 120, 200, 0.06) 40%, transparent 80%),
+    /* Deep space purple */
+    radial-gradient(ellipse 1600px 1000px at 50% 50%, rgba(50, 50, 120, 0.20) 0%, rgba(30, 30, 80, 0.12) 60%, transparent 100%);
+}
+
+/* City - Neon-lit urban sprawl
+   Metaphor: Communities form like city districts with distinct cultures */
+body[data-scene="city"]::before {
+  background:
+    /* Cyan neon highlights */
+    radial-gradient(circle 500px at 20% 40%, rgba(0, 200, 255, 0.12) 0%, transparent 60%),
+    radial-gradient(circle 400px at 80% 70%, rgba(100, 255, 200, 0.10) 0%, transparent 55%),
+    /* Magenta accent glow */
+    radial-gradient(circle 350px at 60% 20%, rgba(255, 80, 200, 0.08) 0%, transparent 50%),
+    /* Urban blue atmosphere */
+    linear-gradient(180deg,
+      rgba(20, 40, 60, 0.28) 0%,
+      rgba(25, 45, 65, 0.20) 40%,
+      rgba(18, 35, 50, 0.15) 80%,
+      transparent 100%);
+}
+
+/* Forest - Organic green overlay */
+body[data-scene="forest"]::before {
+  background:
+    radial-gradient(ellipse 1000px 600px at 50% 0%, rgba(40, 80, 50, 0.25) 0%, transparent 60%),
+    linear-gradient(180deg,
+      rgba(15, 30, 20, 0.4) 0%,
+      rgba(20, 35, 25, 0.3) 40%,
+      rgba(12, 25, 18, 0.2) 80%,
+      transparent 100%);
+}
+
+/* Air (Emotion) - Multicolor emotional atmosphere with flowing gradients */
+body[data-scene="air"]::before {
+  background:
+    radial-gradient(circle 600px at 20% 30%, rgba(255, 100, 150, 0.15) 0%, transparent 50%),
+    radial-gradient(circle 800px at 75% 60%, rgba(100, 150, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(circle 500px at 50% 80%, rgba(150, 255, 200, 0.10) 0%, transparent 50%),
+    radial-gradient(ellipse 1200px 400px at 50% 40%, rgba(255, 200, 100, 0.08) 0%, transparent 60%),
+    linear-gradient(135deg,
+      rgba(30, 25, 35, 0.4) 0%,
+      rgba(25, 30, 40, 0.3) 50%,
+      rgba(20, 25, 30, 0.2) 100%);
+}
+
+/* Lab - Structured grid-like */
+body[data-scene="lab"]::before {
+  background:
+    linear-gradient(135deg, rgba(20, 20, 30, 0.3) 0%, rgba(25, 25, 35, 0.2) 50%, transparent 100%),
+    linear-gradient(45deg, transparent 40%, rgba(26, 26, 46, 0.1) 50%, transparent 60%);
+}
+
+/* Scene layers - decorative overlays per scene */
+.scene-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  will-change: opacity;
+}
+
+/* Stars - Animated twinkling field */
+body[data-scene="cosmos"] .scene--stars {
+  opacity: 0.4;
+  background-image:
+    radial-gradient(2px 2px at 15% 25%, rgba(255, 255, 255, 0.6) 0 2px, transparent 2px),
+    radial-gradient(1px 1px at 55% 65%, rgba(0, 255, 224, 0.4) 0 1px, transparent 1px),
+    radial-gradient(2px 2px at 35% 45%, rgba(255, 255, 255, 0.5) 0 2px, transparent 2px),
+    radial-gradient(1px 1px at 75% 15%, rgba(255, 0, 224, 0.3) 0 1px, transparent 1px),
+    radial-gradient(1px 1px at 90% 80%, rgba(255, 255, 255, 0.4) 0 1px, transparent 1px);
+  background-size: 140px 140px, 180px 180px, 200px 200px, 220px 220px, 160px 160px;
+  animation: starfield-drift 120s linear infinite;
+}
+
+@keyframes starfield-drift {
+  0% { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
+  100% { background-position: 140px 140px, -180px 180px, 200px -200px, -220px -220px, 160px 160px; }
+}
+
+/* Orbits - Concentric rings representing planetary orbits
+   Metaphor: Artists' gravitational pull creates orbit paths for content */
+body[data-scene="orbit"] .scene--orbits {
+  opacity: 0.38;
+  background-image:
+    /* Innermost orbit - fastest rotation */
+    radial-gradient(circle 250px at 50% 50%, transparent 248px, rgba(100, 180, 255, 0.25) 249px, rgba(100, 180, 255, 0.15) 250px, transparent 251px),
+    /* Second orbit */
+    radial-gradient(circle 380px at 50% 50%, transparent 378px, rgba(150, 200, 255, 0.20) 379px, rgba(150, 200, 255, 0.12) 380px, transparent 381px),
+    /* Third orbit */
+    radial-gradient(circle 520px at 50% 50%, transparent 518px, rgba(180, 220, 255, 0.16) 519px, rgba(180, 220, 255, 0.09) 520px, transparent 521px),
+    /* Outermost orbit - slowest */
+    radial-gradient(circle 680px at 50% 50%, transparent 678px, rgba(200, 230, 255, 0.12) 679px, rgba(200, 230, 255, 0.06) 680px, transparent 681px),
+    /* Small orbital bodies/satellites scattered */
+    radial-gradient(circle 8px at 35% 40%, rgba(255, 200, 150, 0.4) 0%, transparent 100%),
+    radial-gradient(circle 6px at 65% 55%, rgba(200, 150, 255, 0.35) 0%, transparent 100%),
+    radial-gradient(circle 7px at 45% 65%, rgba(150, 255, 200, 0.3) 0%, transparent 100%),
+    radial-gradient(circle 5px at 58% 38%, rgba(255, 180, 200, 0.35) 0%, transparent 100%);
+  animation: orbital-pulse 8s ease-in-out infinite;
+}
+
+@keyframes orbital-pulse {
+  0%, 100% { opacity: 0.38; }
+  50% { opacity: 0.45; }
+}
+
+/* City Grid - Perspective-like converging lines */
+body[data-scene="city"] .scene--grid {
+  opacity: 0.3;
+  background:
+    linear-gradient(rgba(0, 255, 224, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 200, 255, 0.08) 1px, transparent 1px),
+    radial-gradient(ellipse at bottom, rgba(100, 200, 255, 0.06) 0%, transparent 50%);
+  background-size: 40px 40px, 40px 40px, 100% 400px;
+  background-position: 0 0, 0 0, center bottom;
+}
+
+/* Forest Canopy - Layered organic shapes with light filtering */
+body[data-scene="forest"] .scene--canopy {
+  opacity: 0.35;
+  background:
+    radial-gradient(ellipse 800px 250px at 30% 0%, rgba(100, 180, 100, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse 600px 200px at 70% 0%, rgba(80, 160, 90, 0.35) 0%, transparent 50%),
+    radial-gradient(ellipse 700px 220px at 50% 0%, rgba(90, 170, 95, 0.3) 0%, transparent 50%),
+    linear-gradient(180deg, transparent 0%, rgba(60, 120, 70, 0.15) 30%, transparent 70%);
+}
+
+/* Emotion Orbs - Colorful floating spheres representing different emotions */
+body[data-scene="air"] .scene--bubbles {
+  opacity: 0.35;
+  background-image:
+    /* Joy - warm yellow/orange */
+    radial-gradient(circle 80px at 25% 35%, rgba(255, 200, 100, 0.20) 20%, rgba(255, 150, 80, 0.08) 50%, transparent 80%),
+    /* Calm - cool blue */
+    radial-gradient(circle 100px at 70% 60%, rgba(100, 180, 255, 0.18) 20%, rgba(80, 150, 230, 0.06) 50%, transparent 80%),
+    /* Energy - cyan/green */
+    radial-gradient(circle 70px at 15% 75%, rgba(100, 255, 200, 0.16) 20%, rgba(80, 230, 180, 0.05) 50%, transparent 80%),
+    /* Excitement - pink/magenta */
+    radial-gradient(circle 90px at 80% 25%, rgba(255, 100, 180, 0.18) 20%, rgba(230, 80, 150, 0.06) 50%, transparent 80%),
+    /* Subtle background orbs */
+    radial-gradient(circle 60px at 50% 50%, rgba(200, 200, 255, 0.10) 30%, rgba(180, 180, 230, 0.03) 60%, transparent 90%),
+    radial-gradient(circle 50px at 35% 20%, rgba(255, 220, 180, 0.08) 30%, transparent 70%);
+  background-size: 350px 350px, 420px 420px, 300px 300px, 380px 380px, 250px 250px, 220px 220px;
+  animation: emotion-drift 40s ease-in-out infinite;
+}
+
+@keyframes emotion-drift {
+  0%, 100% {
+    background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+  }
+  33% {
+    background-position: 30px 25px, -20px -30px, 35px -15px, -25px 20px, 15px 10px, -10px 8px;
+  }
+  66% {
+    background-position: -25px 35px, 25px -20px, -30px 25px, 30px -25px, -12px 15px, 12px -10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-layer {
+    animation: none !important;
+  }
+  body[data-scene="cosmos"] .scene--stars {
+    animation: none;
+  }
+  body[data-scene="air"] .scene--bubbles {
+    animation: none;
+  }
+  body::before {
+    transition: opacity 200ms ease, background 200ms ease;
+  }
+}
+
+/* Legacy background classes - DISABLED (now using body scene system) */
+/* These classes kept for HTML compatibility but no longer render backgrounds */
+/* Removed background: transparent to avoid overriding .section base color */
+.bg-cosmos,
+.bg-dawn,
+.bg-city,
+.bg-canopy,
+.bg-space,
+.bg-lab,
+.bg-forest,
+.bg-neutral,
+.bg-cosmos-deep {
+  /* Empty - rely on body[data-scene] system for backgrounds */
+  position: relative;
+}
+
+/* Remove all ::before and ::after from legacy classes */
+.bg-cosmos::before,
+.bg-city::after,
+.bg-canopy::before,
+.bg-space::after,
+.bg-lab::before {
+  display: none;
+}
+
+/* Hero Section */
+.hero-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center,
+    var(--color-background-secondary) 0%,
+    var(--color-background-primary) 100%);
+}
+
+.starfield {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 1 !important; /* Force visible - prevent any JS from hiding */
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.9;
+  animation: twinkle 5s infinite;
+  box-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.hero-content {
+  text-align: center;
+  z-index: 1;
+}
+
+.hero-subtitle {
+  font-size: var(--font-size-body-lg);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-4);
+}
+
+.scroll-cue {
+  margin-top: var(--space-7);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+
+/* Distinct Layout Patterns */
+.layout-split-left {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-7);
+  align-items: center;
+}
+
+.layout-split-right {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-7);
+  align-items: center;
+}
+
+.layout-center-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.layout-network-audio {
+  display: grid;
+  grid-template-columns: 200px 1fr 300px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.layout-canopy {
+  position: relative;
+  min-height: 100vh;
+}
+
+.layout-emotion-panel {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: var(--space-7);
+}
+
+.layout-ingredient-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5);
+  padding: var(--space-6);
+}
+
+/* Legacy layout names for compatibility */
+.layout-left-viz {
+  display: grid;
+  grid-template-columns: 60% 40%;
+  gap: var(--space-7);
+  min-height: 80vh;
+}
+
+.layout-fullbleed {
+  position: relative;
+}
+
+.layout-center-network {
+  display: grid;
+  grid-template-columns: 1fr 250px;
+  gap: var(--space-7);
+}
+
+.layout-bubble-cloud {
+  display: grid;
+  grid-template-columns: 200px 1fr 300px;
+  gap: var(--space-5);
+}
+
+/* Sticky Rail */
+.sticky-rail {
+  position: sticky;
+  top: 120px;
+  height: fit-content;
+}
+
+/* TASK 2 - Enhanced layout utilities for distinct section compositions */
+.layout-left-rail {
+  display: grid;
+  grid-template-columns: minmax(480px, 2fr) minmax(280px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.layout-full-bleed {
+  position: relative;
+  width: 100%;
+}
+
+.bottom-rail {
+  position: sticky;
+  bottom: 0;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  z-index: 10;
+}
+
+.layout-audio-tray {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.audio-tray {
+  display: grid;
+  gap: 12px;
+  position: sticky;
+  top: 120px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+.layout-kpi-rail {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.kpi-rail {
+  display: grid;
+  gap: 8px;
+  position: sticky;
+  top: 120px;
+  max-height: calc(100vh - 160px);
+}
+
+.layout-legend-drawer {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  position: relative;
+}
+
+.drawer {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 320px;
+  max-width: 80vw;
+  background: var(--glass-frosted-background);
+  backdrop-filter: blur(var(--glass-frosted-blur));
+  border: var(--glass-frosted-border);
+  border-radius: 8px;
+  padding: var(--space-4);
+  z-index: 100;
+}
+
+.layout-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* Viz Containers */
+.viz-container {
+  width: 100%;
+  min-height: 80vh;
+  height: calc(100vh - 160px);
+  border: 1px solid var(--color-border-interactive);
+  border-radius: 8px;
+  background: var(--color-background-secondary);
+  padding: var(--space-6);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--duration-macro) var(--easing-standard);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.viz-fullwidth {
+  width: 100%;
+  max-width: 100%;
+  border: none;
+  padding: 0;
+}
+
+.viz-fullbleed {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.viz-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--color-accent-cyan),
+    transparent);
+  transform: translateX(-100%);
+  animation: scan 3s infinite;
+}
+
+@keyframes scan {
+  to { transform: translateX(100%); }
+}
+
+/* Scroll Steps */
+.scroll-step {
+  min-height: 50vh;
+  padding: var(--space-6) 0;
+}
+
+/* KPI Rails */
+.kpi-rail {
+  display: flex;
+  gap: var(--space-5);
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  background: var(--glass-subtle-background);
+  border-radius: 8px;
+  border: var(--glass-subtle-border);
+  backdrop-filter: blur(var(--glass-subtle-blur));
+}
+
+.kpi-rail-vertical {
+  position: absolute;
+  right: var(--space-6);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.kpi-item {
+  flex: 1;
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent-cyan);
+  font-family: var(--font-family-mono);
+}
+
+.kpi-label {
+  font-size: var(--font-size-label);
+  color: var(--color-text-disabled);
+  margin-top: var(--space-1);
+}
+
+/* Year Selector */
+.year-selector {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--glass-subtle-background);
+  border-radius: 8px;
+  border: var(--glass-subtle-border);
+}
+
+.year-btn {
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-micro) var(--easing-standard);
+  border-radius: 6px;
+  font-family: var(--font-family-sans);
+}
+
+.year-btn:hover {
+  color: var(--color-accent-cyan);
+}
+
+.year-btn.active {
+  background: var(--color-accent-cyan);
+  color: var(--color-background-primary);
+}
+
+/* Annotation Rail */
+.annotation-rail {
+  position: absolute;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+}
+
+.annotation {
+  color: var(--color-text-secondary);
+  margin-top: var(--space-3);
+}
+
+/* Audio Tray */
+.audio-tray {
+  position: sticky;
+  top: 120px;
+  height: fit-content;
+  background: var(--glass-subtle-background);
+  border-radius: 8px;
+  border: var(--glass-subtle-border);
+  padding: var(--space-4);
+  backdrop-filter: blur(var(--glass-subtle-blur));
+}
+
+.audio-tray h3 {
+  font-size: var(--font-size-label);
+  margin-bottom: var(--space-3);
+}
+
+/* Legend Panel */
+.legend-panel {
+  background: var(--glass-subtle-background);
+  border-radius: 8px;
+  border: var(--glass-subtle-border);
+  padding: var(--space-4);
+  backdrop-filter: blur(var(--glass-subtle-blur));
+}
+
+.legend-panel h3 {
+  font-size: var(--font-size-label);
+  margin-bottom: var(--space-3);
+}
+
+.emotion-legend {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Detail Drawer */
+.detail-drawer {
+  position: fixed;
+  right: 0;
+  top: 64px;
+  bottom: 0;
+  width: 400px;
+  background: var(--glass-frosted-background);
+  backdrop-filter: blur(var(--glass-frosted-blur));
+  border-left: var(--glass-frosted-border);
+  transform: translateX(100%);
+  transition: transform var(--duration-macro) var(--easing-standard);
+  z-index: 900;
+  padding: var(--space-6);
+}
+
+.detail-drawer:not([aria-hidden="true"]) {
+  transform: translateX(0);
+}
+
+.drawer-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color var(--duration-micro) var(--easing-standard);
+}
+
+.drawer-close:hover {
+  color: var(--color-text-primary);
+}
+
+/* Quiz Modal */
+.quiz-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-macro) var(--easing-standard);
+  z-index: 2000;
+}
+
+.quiz-modal:not([aria-hidden="true"]) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  background: var(--glass-frosted-background);
+  backdrop-filter: blur(var(--glass-frosted-blur));
+  border: var(--glass-frosted-border);
+  border-radius: 12px;
+  padding: var(--space-6);
+  max-width: 600px;
+  width: 90%;
+}
+
+.modal-close {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-accent-cyan);
+  color: var(--color-background-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  transition: transform var(--duration-micro) var(--easing-standard);
+}
+
+.modal-close:hover {
+  transform: scale(1.05);
+}
+
+/* Card Grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-6);
+}
+
+/* Footer */
+.site-footer {
+  text-align: center;
+  padding: var(--space-7) 0;
+  border-top: var(--glass-subtle-border);
+  margin-top: var(--space-8);
+  color: var(--color-text-secondary);
+}
+
+.site-footer a {
+  color: var(--color-accent-cyan);
+  text-decoration: none;
+  transition: color var(--duration-micro) var(--easing-standard);
+}
+
+.site-footer a:hover {
+  color: var(--color-accent-magenta);
+}
+
+/* Falling Leaves Animation */
+.falling-leaves-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.falling-leaf {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: fall var(--duration-cinematic) linear infinite;
+  opacity: 0;
+  transition: transform var(--duration-micro);
+}
+
+.falling-leaf svg {
+  width: 100%;
+  height: 100%;
+  color: var(--color-accent-magenta);
+}
+
+.falling-leaf.interactive {
+  pointer-events: auto;
+}
+
+.falling-leaf:hover {
+  transform: scale(1.2);
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(calc(100vh + 100px)) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes float {
+  from { transform: translateY(0); }
+  to { transform: translateY(-20px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.05; }
+  50% { opacity: 0.1; }
+}
+
+/* Ingredient Cards */
+.ingredient-card {
+  background: var(--glass-subtle-background);
+  border-radius: 12px;
+  padding: var(--space-5);
+  border: var(--glass-subtle-border);
+  backdrop-filter: blur(var(--glass-subtle-blur));
+  cursor: pointer;
+  transition: all var(--duration-micro) var(--easing-standard);
+  position: relative;
+  overflow: hidden;
+}
+
+.ingredient-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, var(--color-accent-cyan), transparent);
+  transform: translateX(-100%);
+  transition: transform var(--duration-macro);
+  opacity: 0.1;
+}
+
+.ingredient-card:hover::before {
+  transform: translateX(100%);
+}
+
+.ingredient-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-accent-cyan);
+  box-shadow: 0 10px 30px rgba(0, 255, 224, 0.2);
+}
+
+.ingredient-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-3);
+  color: var(--color-accent-cyan);
+}
+
+.ingredient-name {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-2);
+  color: var(--color-text-primary);
+}
+
+.ingredient-metrics {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+.metric-item {
+  flex: 1;
+}
+
+.metric-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-mono);
+  color: var(--color-accent-magenta);
+}
+
+.metric-label {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-disabled);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Enhanced Quiz Modal */
+.quiz-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+.comparison-side {
+  text-align: center;
+  padding: var(--space-5);
+  background: var(--glass-subtle-background);
+  border-radius: 12px;
+  border: 2px solid transparent;
+  transition: all var(--duration-micro);
+}
+
+.comparison-side.with {
+  border-color: var(--color-accent-cyan);
+}
+
+.comparison-side.without {
+  border-color: var(--color-accent-magenta);
+}
+
+.comparison-side h3 {
+  font-size: var(--font-size-h2);
+  margin-bottom: var(--space-4);
+}
+
+.comparison-stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border-disabled);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-size: var(--font-size-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.stat-value {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-mono);
+}
+
+/* Tooltips */
+.viz-tooltip,
+.planet-tooltip,
+.emotion-tooltip,
+.ingredient-tooltip {
+  position: absolute;
+  background: var(--glass-frosted-background);
+  backdrop-filter: blur(var(--glass-frosted-blur));
+  border: var(--glass-frosted-border);
+  padding: var(--space-3);
+  border-radius: 8px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-micro) var(--easing-standard);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-caption);
+  z-index: 9999;
+  max-width: 250px;
+  box-shadow: var(--shadow-200);
+}
+
+/* Micro-interactions */
+/* A) Planets - Comet effect */
+.comet {
+  position: absolute;
+  top: 10%;
+  right: -20%;
+  width: 160px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.0), rgba(255, 255, 255, 0.9));
+  opacity: 0.9;
+  transform: translate(0, 0) rotate(-20deg);
+  transition: transform 0.4s linear, opacity 0.4s linear;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comet {
+    display: none;
+  }
+}
+
+/* B) Community - Audio tray effects */
+.audio-item {
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: 4px;
+  transition: background 200ms ease-out;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.audio-item:hover {
+  background: rgba(0, 255, 224, 0.1);
+}
+
+.audio-item.playing {
+  background: rgba(0, 255, 224, 0.15);
+  animation: audio-pulse 2s ease-in-out;
+}
+
+@keyframes audio-pulse {
+  0%, 100% { background: rgba(0, 255, 224, 0.15); }
+  50% { background: rgba(0, 255, 224, 0.25); }
+}
+
+/* Network edge emphasis when sound is active */
+#viz-community.sound-active circle,
+#viz-community.sound-active line {
+  stroke-width: 2.5;
+  transition: stroke-width 200ms ease-out;
+}
+
+/* C) Ranking - Leaf hint styles handled inline in JS */
+
+/* D) Emotion - Bubble breathe (handled via JS transform) */
+.bubble,
+circle[data-type="bubble"] {
+  transition: transform 150ms ease-out, stroke 150ms ease-out;
+  transform-origin: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+
+  .layout-left-viz,
+  .layout-center-network,
+  .layout-bubble-cloud {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-drawer {
+    width: 100%;
+  }
+
+  .sticky-rail {
+    position: static;
+  }
+
+  .kpi-rail-vertical {
+    position: static;
+    transform: none;
+    margin-top: var(--space-4);
+  }
+}
