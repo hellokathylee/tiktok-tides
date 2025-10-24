@@ -1,36 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tiktok Tides</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- D3 v7 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" defer></script>
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Tiktok Tides</h1>
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>TikTok Tides</title>
+    <!-- Time-themed legend panel -->
+    <section class="legend-panel" aria-label="Visualization legend">
+      <p class="legend-subtitle">How tiktok reel duration influence views</p>
 
-        <!-- google fonts -->
+      <div class="legend-chips">
+        <div class="chip">
+          <span class="chip-icon">🕒</span>
+          <span><strong>Angle</strong> (swept arc) = <em>Video duration (sec)</em></span>
+        </div>
+        <div class="chip">
+          <span class="chip-icon">🟢</span>
+          <span><strong>Radius</strong> = <em>Average playCount</em> (bigger = more plays)</span>
+        </div>
+        <div class="chip">
+          <span class="chip-icon">🎨</span>
+          <span><strong>Color</strong> = Distinct duration groups</span>
+        </div>
+      </div>
+    </section>
+  </header>
 
-        <!-- CSS LIBRARIES-->
-        <!-- bootstrap css -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-
-        <!-- custom css -->
-        <link rel="stylesheet" href="css/style.css" />
-    </head>
-
-    <body>
-        <h1>TikTok Tides</h1>
-
-        <!-- bootstrap js -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-            crossorigin="anonymous"></script>
-
-        <!-- d3 -->
-        <script src="https://d3js.org/d3.v7.min.js"></script>
-
-        <!-- load data, create visualizations -->
-        <script src="js/main.js"></script>
-    </body>
-
+  <main>
+    <div id="chart" aria-label="Stopwatch-style radial visualization"></div>
+    <!-- <p class="note">
+      Showing videos with duration ≤ <strong>60s</strong>. Each translucent sector starts at
+      <strong>12 o’clock (0s)</strong>. Angle encodes duration; radius encodes average
+      <code>playCount</code> for that exact duration. Click the top button to replay the animation.
+    </p> -->
+  </main>
+</body>
 </html>
