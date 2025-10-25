@@ -13,6 +13,7 @@
   <!-- Styles -->
   <link rel="stylesheet" href="/src/css/tokens.css">
   <link rel="stylesheet" href="/src/css/base.css">
+  <link rel="stylesheet" href="/src/css/stopwatch.css">
 </head>
 <body>
   <!-- Progress Bar -->
@@ -55,16 +56,27 @@
   <main id="main-content">
     <!-- Section 1: Ignite (Stopwatch) - Centered full-width -->
     <section id="section-ignite" class="section scroll-section bg-dawn" role="region" aria-labelledby="ignite-title">
-      <div class="section-container layout-center-stage">
-        <div class="section-intro">
-          <h2 id="ignite-title">Ignite</h2>
-          <p class="lead">The first moments determine everything.</p>
+      <!-- Time-themed legend panel -->
+      <section class="legend-panel" aria-label="Visualization legend">
+        <p class="legend-subtitle">How tiktok reel duration influence views</p>
+
+        <div class="legend-chips">
+          <div class="chip">
+            <span class="chip-icon">🕒</span>
+            <span><strong>Angle</strong> (swept arc) = <em>Video duration (sec)</em></span>
+          </div>
+          <div class="chip">
+            <span class="chip-icon">🟢</span>
+            <span><strong>Radius</strong> = <em>Average playCount</em> (bigger = more plays)</span>
+          </div>
+          <div class="chip">
+            <span class="chip-icon">🎨</span>
+            <span><strong>Color</strong> = Distinct duration groups</span>
+          </div>
         </div>
-        <div id="viz-stopwatch" class="viz-container viz-fullwidth" data-viz="stopwatch"></div>
-        <div class="section-annotations">
-          <p class="lab-note">Lab Note: We analyzed [PLACEHOLDER_VIDEO_COUNT] TikToks to decode the spark.</p>
-        </div>
-      </div>
+      </section>
+
+      <div id="chart" aria-label="Stopwatch-style radial visualization"></div>
     </section>
 
     <!-- Section 2: Surge (Planets) - Fullbleed with annotation rail -->

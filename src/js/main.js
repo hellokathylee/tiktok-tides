@@ -25,6 +25,15 @@ const SCENE_MAP = {
 // Scene names for keyboard shortcuts
 const SCENE_NAMES = ['cosmos', 'dawn', 'orbit', 'city', 'forest', 'air', 'lab'];
 
+// --- util: tiny debounce (used for stopwatch resize) ------------------------
+function debounce(fn, ms = 150) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+
 /**
  * TASK 0 - Dev-only SceneChip
  * Shows current scene at bottom-left for QA
@@ -123,6 +132,9 @@ class TikTokTidesApp {
       'section-ingredients': { bg: 'bg-lab', name: 'Recipe Builder' }
     };
 
+    // bound handlers
+    this._stopwatchResize = null;
+
     this.init();
   }
 
@@ -198,11 +210,49 @@ class TikTokTidesApp {
     // Initialize each viz with canonical API
     for (const [key, viz] of Object.entries(this.vizControllers)) {
       try {
-        await viz.init(`#viz-${key === 'planets' ? 'planets' : key}`, {
+        // SPECIAL-CASE: Stopwatch mounts into #chart (Section 1)
+        const selector =
+          key === 'stopwatch'
+            ? '#chart'
+            : `#viz-${key === 'planets' ? 'planets' : key}`;
+
+        await viz.init(selector, {
           reducedMotion: this.prefersReducedMotion(),
           animationSpeed: 1,
           colorScheme: 'default'
         });
+
+        // For stopwatch, mount immediately and wire resize (no .viz-container in HTML)
+        if (key === 'stopwatch') {
+          viz.mount();
+          viz.mounted = true;
+
+          // Debounced resize sized to the #chart box; keep dial circular
+          this._stopwatchResize = debounce(() => {
+            const el = document.getElementById('chart');
+            if (!el) return;
+            const { width, height } = el.getBoundingClientRect();
+            const size = Math.max(320, Math.min(width, height || width));
+            viz.resize(size, size);
+          }, 150);
+
+          window.addEventListener('resize', this._stopwatchResize);
+          this._stopwatchResize();
+
+          // Also prime step updates when the ignite section comes into view
+          const ignite = document.getElementById('section-ignite');
+          if (ignite && 'IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries) => {
+              entries.forEach((e) => {
+                if (e.isIntersecting && e.intersectionRatio > 0.5) {
+                  viz.update(1);
+                  setTimeout(() => viz.update(2), 1600);
+                }
+              });
+            }, { threshold: 0.5 });
+            io.observe(ignite);
+          }
+        }
 
         // Setup event listeners for micro-interactions
         this.setupVizEvents(key, viz);
@@ -292,7 +342,7 @@ class TikTokTidesApp {
     // Transition between sections
     this.transitionSections(prevSection, sectionId);
 
-    // Mount visualization if needed
+    // Mount visualization if needed (sections that use .viz-container)
     const vizContainer = section.querySelector('.viz-container');
     if (vizContainer) {
       const vizType = vizContainer.dataset.viz;
@@ -301,6 +351,19 @@ class TikTokTidesApp {
         viz.mount();
         viz.mounted = true;
       }
+    }
+
+    // Special-case: ensure Stopwatch (section-ignite) is mounted & step-updated
+    if (sectionId === 'section-ignite') {
+      const sw = this.vizControllers.stopwatch;
+      if (sw && !sw.mounted) {
+        sw.mount();
+        sw.mounted = true;
+      }
+      // Trigger a gentle narrative step pass
+      sw?.update(1);
+      setTimeout(() => sw?.update(2), 1600);
+      this._stopwatchResize?.(); // ensure it fits if coming from different viewport
     }
 
     // TASK 4 - Enhanced live region announcement with scene info
@@ -348,6 +411,15 @@ class TikTokTidesApp {
           }
         });
       }
+    } else if (section?.id === 'section-ignite') {
+      // Allow scroll-steps to target stopwatch even without .viz-container
+      const sw = this.vizControllers.stopwatch;
+      sw?.update(step, {
+        transition: {
+          duration: 400,
+          easing: 'cubic-bezier(0.4, 0.0, 0.2, 1)'
+        }
+      });
     }
 
     // Update annotation rail if present
