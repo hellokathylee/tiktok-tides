@@ -1,0 +1,437 @@
+// Stopwatch Visualization Adapter - Wraps legacy implementation with Canonical API
+import { EventEmitter, prefersReducedMotion } from '../shared/utils.js';
+import { VIZ_EVENTS, DEFAULT_OPTIONS } from '../shared/types.js';
+
+export class StopwatchViz extends EventEmitter {
+  constructor() {
+    super();
+    this.container = null;
+    this.data = null;         // Will hold [[durationSeconds, meanPlayCount], ...] sorted ascending by duration
+    this.rawData = null;      // Optional: raw CSV rows (if needed later)
+    this.state = {
+      currentStep: 0,
+      filters: {},
+      highlights: [],
+      animationPaused: false,
+      interactionMode: 'explore'
+    };
+    this.options = { ...DEFAULT_OPTIONS, reducedMotion: prefersReducedMotion() };
+    this.mounted = false;
+
+    // D3 handles
+    this.svg = null;
+    this.g = null;
+    this.paths = null;
+    this.buttonRect = null;
+    this.crownRect = null;
+
+    // scales & layout
+    this.angleScale = null;
+    this.rScale = null;
+
+    // geometry cache
+    this._geom = {
+      width: 0,
+      height: 0,
+      ringOuter: 0,
+      ringInner: 0,
+      btnY: 0,
+      crownY: 0,
+      R: 0,
+      margin: 42
+    };
+
+    // tooltip ref
+    this.tooltip = null;
+  }
+
+  async init(selector, options = {}) {
+    this.container = typeof selector === 'string'
+      ? document.querySelector(selector)
+      : selector;
+
+    if (!this.container) {
+      throw new Error(`Container not found: ${selector}`);
+    }
+
+    this.options = { ...this.options, ...options };
+
+    // Load CSV-backed data for MVP
+    await this.loadData();
+    this.emit(VIZ_EVENTS.DATA_READY);
+  }
+
+  // --- Data loading (requested chunk, with processing added) -----------------
+  async loadData() {
+    try {
+      const [data] = await Promise.all([
+        d3.csv('/data/cleaned_tiktok_data.csv', d3.autoType),
+      ]);
+      this.rawData = data;
+
+      // Keep rows with finite duration & playCount, and duration <= 60s
+      const rows = data.filter(d =>
+        Number.isFinite(d?.['videoMeta/duration']) &&
+        Number.isFinite(d?.playCount) &&
+        +d['videoMeta/duration'] <= 60
+      );
+
+      // Group by exact duration (seconds) -> mean playCount
+      let grouped = d3.rollups(
+        rows,
+        v => d3.mean(v, d => +d.playCount),
+        d => +d['videoMeta/duration']
+      ).filter(d => Number.isFinite(d[0]) && Number.isFinite(d[1]));
+
+      // Sort by duration ascending (needed for animation order)
+      grouped.sort((a, b) => d3.ascending(a[0], b[0]));
+
+      this.data = grouped; // [[durationSec, meanPlayCount], ...]
+    } catch (error) {
+      console.error('Error loading CSV data:', error);
+      throw error;
+    }
+  }
+
+  // --- Lifecycle -------------------------------------------------------------
+  mount() {
+    if (this.mounted) return;
+    this.render();
+    this.mounted = true;
+    this.emit(VIZ_EVENTS.ENTER_COMPLETE);
+  }
+
+  unmount() {
+    if (!this.mounted) return;
+    if (this.container) this.container.innerHTML = '';
+    if (this.tooltip) {
+      this.tooltip.remove();
+      this.tooltip = null;
+    }
+    this.svg = null;
+    this.g = null;
+    this.paths = null;
+    this.buttonRect = null;
+    this.crownRect = null;
+    this.mounted = false;
+    this.emit(VIZ_EVENTS.EXIT_COMPLETE);
+  }
+
+  destroy() {
+    this.unmount();
+    this.data = null;
+    this.rawData = null;
+    this.state = null;
+    this.events.clear();
+  }
+
+  // --- API -------------------------------------------------------------------
+  update(step, payload = {}) {
+    this.state.currentStep = step;
+
+    switch (step) {
+      case 1:
+        // Highlight the “optimal” window used in the original viz (15–30s)
+        this.highlightDurationRange(15, 30);
+        break;
+      case 2:
+        this.showVelocityMetrics();
+        break;
+      default:
+        // reset highlighting
+        this.highlightDurationRange(-Infinity, Infinity);
+        break;
+    }
+
+    this.emit(VIZ_EVENTS.UPDATE_COMPLETE);
+  }
+
+  resize(width, height) {
+    this.options.width = width;
+    this.options.height = height;
+    if (this.mounted) {
+      this.render();
+    }
+    this.emit(VIZ_EVENTS.RESIZE);
+  }
+
+  getState() {
+    return { ...this.state };
+  }
+
+  setState(newState) {
+    this.state = { ...this.state, ...newState };
+    this.emit(VIZ_EVENTS.STATE_CHANGE);
+  }
+
+  isDataReady() {
+    return Array.isArray(this.data) && this.data.length > 0;
+  }
+
+  // --- Rendering -------------------------------------------------------------
+  render() {
+    if (!this.isDataReady()) return;
+
+    // Clear container
+    this.container.innerHTML = '';
+
+    // Container sizing
+    const bbox = this.container.getBoundingClientRect();
+    const size = Math.min(bbox.width || 800, bbox.height || 800) || 800;
+    const width = size;
+    const height = size;
+    const margin = this._geom.margin;
+
+    // SVG root
+    this.svg = d3.select(this.container)
+      .append('svg')
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('role', 'img')
+      .attr('aria-label', 'Stopwatch visualization showing video duration impact on engagement');
+
+    // Centering group
+    this.g = this.svg.append('g')
+      .attr('transform', `translate(${width / 2}, ${height / 2})`);
+
+    // Radii (match second implementation)
+    const R = Math.min(width, height) / 2 - margin;
+    const ringOuter = R;
+    const ringInner = R * 0.9;
+    const sectorMaxRadius = R * 0.78;
+    const sectorMinRadius = Math.max(12, R * 0.12);
+
+    // Save geom
+    Object.assign(this._geom, {
+      width, height, R, ringOuter, ringInner
+    });
+
+    // Stopwatch chrome
+    this.g.append('circle').attr('r', ringOuter).attr('class', 'stopwatch-ring');
+    this.g.append('circle').attr('r', ringInner).attr('class', 'stopwatch-inner');
+
+    // Top button & crown (button clickable to replay)
+    const btnW = R * 0.25, btnH = R * 0.1, btnR = 8;
+    const btnY = -ringOuter - btnH - 10;
+    this._geom.btnY = btnY;
+
+    this.buttonRect = this.g.append('rect')
+      .attr('x', -btnW / 2)
+      .attr('y', btnY)
+      .attr('width', btnW)
+      .attr('height', btnH)
+      .attr('rx', btnR)
+      .attr('class', 'stopwatch-button clickable')
+      .attr('tabindex', 0) // keyboard access
+      .attr('role', 'button')
+      .attr('aria-label', 'Replay animation');
+
+    this.buttonRect.append('title').text('Replay animation');
+
+    const crownW = R * 0.08, crownH = R * 0.12, crownR = 5;
+    const crownY = -ringOuter - crownH / 2 + 2;
+    this._geom.crownY = crownY;
+
+    this.crownRect = this.g.append('rect')
+      .attr('x', -crownW / 2)
+      .attr('y', crownY)
+      .attr('width', crownW)
+      .attr('height', crownH)
+      .attr('rx', crownR)
+      .attr('class', 'stopwatch-button');
+
+    // 60 ticks (bold every 5)
+    const ticks = this.g.append('g').attr('aria-hidden', true);
+    for (let i = 0; i < 60; i++) {
+      const a = (i / 60) * 2 * Math.PI - Math.PI / 2; // 12 o'clock origin
+      const isMajor = i % 5 === 0;
+      const r1 = ringInner - (isMajor ? 10 : 6);
+      const r2 = ringInner - 2;
+      ticks.append('line')
+        .attr('x1', r1 * Math.cos(a))
+        .attr('y1', r1 * Math.sin(a))
+        .attr('x2', r2 * Math.cos(a))
+        .attr('y2', r2 * Math.sin(a))
+        .attr('class', isMajor ? 'tick-major' : 'tick-minor');
+    }
+
+    // Tooltip (one per mount)
+    this.tooltip = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0);
+
+    // Scales
+    this.angleScale = d3.scaleLinear().domain([0, 60]).range([0, 2 * Math.PI]);
+    const pcExtent = d3.extent(this.data, d => d[1]) || [0, 1];
+    this.rScale = d3.scaleSqrt()
+      .domain(pcExtent)
+      .range([sectorMinRadius, sectorMaxRadius])
+      .nice();
+
+    // Colors
+    const color = d3.scaleOrdinal()
+      .domain(this.data.map(d => d[0]))
+      .range(d3.schemeTableau10.concat(d3.schemeSet2).slice(0, this.data.length));
+
+    // Sectors
+    const sectorsG = this.g.append('g').attr('aria-label', 'sectors');
+
+    const arcFor = outerR => d3.arc()
+      .innerRadius(0)
+      .outerRadius(outerR)
+      .cornerRadius(6)
+      .startAngle(0); // start at 12 o'clock
+
+    this.paths = sectorsG.selectAll('path.sector')
+      .data(this.data) // ascending by duration
+      .join('path')
+      .attr('class', 'sector')
+      .attr('fill', d => color(d[0]))
+      .style('opacity', 0.55);
+
+    // Tooltips & hover
+    this.paths
+      .on('pointerenter', (event, d) => {
+        const [duration, avgPC] = d;
+        this.tooltip
+          .style('opacity', 1)
+          .html(
+            `<strong>Duration:</strong> ${duration}s<br>` +
+            `<strong>Avg playCount:</strong> ${d3.format(',.2f')(avgPC)}`
+          )
+          .style('left', `${event.pageX}px`)
+          .style('top', `${event.pageY - 18}px`);
+        d3.select(event.currentTarget).transition().duration(120).style('opacity', 0.85);
+      })
+      .on('pointermove', (event) => {
+        this.tooltip
+          .style('left', `${event.pageX}px`)
+          .style('top', `${event.pageY - 18}px`);
+      })
+      .on('pointerleave', (event) => {
+        this.tooltip.style('opacity', 0);
+        d3.select(event.currentTarget).transition().duration(120).style('opacity', 0.55);
+      })
+      .append('title')
+      .text(d => `Duration: ${d[0]}s\nAvg playCount: ${d3.format(',.2f')(d[1])}`);
+
+    // Center dot
+    this.g.append('circle').attr('r', 4.5).attr('class', 'center-dot');
+
+    // Fixed labels at 15s, 30s, 45s
+    [15, 30, 45].forEach(sec => {
+      const a = this.angleScale(sec) - Math.PI / 2;
+      const rLab = ringOuter - 14;
+      this.g.append('text')
+        .attr('class', 'time-label')
+        .attr('x', rLab * Math.cos(a))
+        .attr('y', rLab * Math.sin(a))
+        .text(`${sec}s`);
+    });
+
+    // Button handlers (click & keyboard)
+    this.buttonRect
+      .on('click', () => { this._pressAnimation(); this.runAnimation(true); })
+      .on('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { this._pressAnimation(); this.runAnimation(true); }
+      });
+
+    // Initial animation (unless reduced motion)
+    if (!this.options.reducedMotion) {
+      this.runAnimation(false);
+    }
+  }
+
+  // --- Animations ------------------------------------------------------------
+  runAnimation(fromUser = false) {
+    if (!this.paths || this.options.reducedMotion) return;
+
+    const sweepDuration = 300; // ms per sector
+    const sweepGap = 40;       // ms between sectors
+
+    const arcFor = outerR => d3.arc().innerRadius(0).outerRadius(outerR).cornerRadius(6).startAngle(0);
+
+    // Reset & animate in order (shortest duration first)
+    this.paths.interrupt();
+    this.paths.attr('d', d => arcFor(this.rScale(d[1])).endAngle(0)(d));
+    this.paths.transition()
+      .delay((d, i) => i * (sweepDuration + sweepGap))
+      .duration(sweepDuration)
+      .ease(d3.easeCubicOut)
+      .attrTween('d', d => {
+        const outerR = this.rScale(d[1]);
+        const end = this.angleScale(d[0]); // duration -> sweep angle
+        const interp = d3.interpolateNumber(0, end);
+        const arc = arcFor(outerR);
+        return t => arc.endAngle(interp(t))(d);
+      });
+
+    if (fromUser) this.emit(VIZ_EVENTS.INTERACTION); // optional signal
+  }
+
+  _pressAnimation() {
+    if (!this.buttonRect || !this.crownRect) return;
+    const { btnY, crownY } = this._geom;
+    const pressDyBtn = 10;
+    const pressDyCrown = 5;
+
+    this.buttonRect.interrupt()
+      .transition().duration(80).attr('y', btnY + pressDyBtn)
+      .transition().duration(280).ease(d3.easeElastic.period(0.3)).attr('y', btnY);
+
+    this.crownRect.interrupt()
+      .transition().duration(80).attr('y', crownY + pressDyCrown)
+      .transition().duration(280).ease(d3.easeElastic.period(0.3)).attr('y', crownY);
+  }
+
+  // --- Interaction helpers ---------------------------------------------------
+  highlightDurationRange(min, max) {
+    if (!this.paths) return;
+
+    this.paths
+      .interrupt()
+      .transition()
+      .duration(180)
+      .style('opacity', d => {
+        const duration = d[0];
+        return duration >= min && duration <= max ? 0.9 : 0.25;
+      })
+      .attr('stroke', d => {
+        const duration = d[0];
+        return duration >= min && duration <= max ? 'var(--color-accent-cyan)' : 'none';
+      })
+      .attr('stroke-width', d => {
+        const duration = d[0];
+        return duration >= min && duration <= max ? 2 : 0;
+      });
+  }
+
+  showVelocityMetrics() {
+    // Placeholder for additional overlays if needed later
+    // (kept to preserve API parity)
+    // e.g., could draw a second set of arcs or markers.
+    // For MVP: no-op with a debug statement.
+    // eslint-disable-next-line no-console
+    console.log('Velocity metrics overlay (placeholder)');
+  }
+
+  playGlowSweep() {
+    // Optional special effect for transitions (kept from legacy API)
+    if (!this.g || this.options.reducedMotion) return;
+
+    const sweep = this.g.append('line')
+      .attr('x1', 0)
+      .attr('y1', 0)
+      .attr('x2', 0)
+      .attr('y2', -this._geom.R * 0.8)
+      .attr('stroke', 'var(--color-accent-cyan)')
+      .attr('stroke-width', 3)
+      .attr('opacity', 0.8);
+
+    sweep
+      .transition()
+      .duration(2000)
+      .ease(d3.easeLinear)
+      .attrTween('transform', () => {
+        return t => `rotate(${t * 360})`;
+      })
+      .on('end', () => sweep.remove());
+  }
+}
