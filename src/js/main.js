@@ -1,6 +1,7 @@
 // Main scrollytelling orchestrator with enhanced transitions
 import '../css/tokens.css';
 import '../css/base.css';
+import '../css/conveyor.css';
 import { MotionPatterns } from './motion/patterns.js';
 import { StopwatchViz } from '../vizzes/stopwatch/index.js';
 import { PlanetViz } from '../vizzes/planet/index.js';
@@ -8,6 +9,7 @@ import { CommunityViz } from '../vizzes/community/index.js';
 import { RankingViz } from '../vizzes/ranking/index.js';
 import { EmotionViz } from '../vizzes/emotion/index.js';
 import { IngredientsViz } from '../vizzes/ingredients/index.js';
+import { ConveyorViz } from '../vizzes/conveyor/index.js';
 import { initMicroInteractions } from './micro-interactions.js';
 import { installIllustrations } from '../illustrations/index.js';
 
@@ -19,7 +21,8 @@ const SCENE_MAP = {
   '#section-spillover': 'city',
   '#section-fade': 'forest',
   '#section-takeaway': 'air',
-  '#section-ingredients': 'lab'
+  '#section-ingredients': 'lab',
+  '#section-conveyor': 'lab'
 };
 
 // Scene names for keyboard shortcuts
@@ -129,7 +132,8 @@ class TikTokTidesApp {
       'section-spillover': { bg: 'bg-city', name: 'Spillover' },
       'section-fade': { bg: 'bg-forest', name: 'Fade/Revival' },
       'section-takeaway': { bg: 'bg-neutral', name: 'The Formula' },
-      'section-ingredients': { bg: 'bg-lab', name: 'Recipe Builder' }
+      'section-ingredients': { bg: 'bg-lab', name: 'Recipe Builder' },
+      'section-conveyor': { bg: 'bg-lab', name: 'Conveyor Belt' }
     };
 
     // bound handlers
@@ -206,6 +210,7 @@ class TikTokTidesApp {
     this.vizControllers.ranking = new RankingViz();
     this.vizControllers.emotion = new EmotionViz();
     this.vizControllers.ingredients = new IngredientsViz();
+    this.vizControllers.conveyor = new ConveyorViz();
 
     // Initialize each viz with canonical API
     for (const [key, viz] of Object.entries(this.vizControllers)) {
@@ -480,6 +485,7 @@ class TikTokTidesApp {
                           href === 'section-fade' ? 'section-fade' :
                           href === 'section-takeaway' ? 'section-takeaway' :
                           href === 'section-ingredients' ? 'section-ingredients' :
+                          href === 'section-conveyor' ? 'section-conveyor' :
                           href;
       link.setAttribute('aria-current', mappedSection === sectionId ? 'true' : 'false');
     });
@@ -529,15 +535,16 @@ class TikTokTidesApp {
   setupKeyboardNav() {
     // Global keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      // Number keys 1-6 jump to sections
-      if (e.key >= '1' && e.key <= '6') {
+      // Number keys 1-7 jump to sections
+      if (e.key >= '1' && e.key <= '7') {
         const sections = [
           'section-ignite',
           'section-surge',
           'section-spillover',
           'section-fade',
           'section-takeaway',
-          'section-ingredients'
+          'section-ingredients',
+          'section-conveyor'
         ];
         const sectionId = sections[parseInt(e.key) - 1];
         const target = document.getElementById(sectionId);
@@ -747,7 +754,7 @@ class TikTokTidesApp {
 
   showKeyboardHelp() {
     console.log('Keyboard shortcuts:');
-    console.log('1-6: Jump to sections');
+    console.log('1-7: Jump to sections');
     console.log('Esc: Close overlays');
     console.log('?: Show this help');
     console.log('Tab: Navigate interactive elements');
