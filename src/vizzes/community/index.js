@@ -41,7 +41,7 @@ export class CommunityViz extends EventEmitter {
       categories: [
         { rank: 1, category: 'Food', color: '#FF69B4', views: 100000 },
         { rank: 2, category: 'Fashion', color: '#ADD8E6', views: 85000 },
-        { rank: 3, category: 'Pets', color: '#FFFF00', views: 76000 },
+        { rank: 3, category: 'Pets', color: '#f7d661ff', views: 76000 },
         { rank: 4, category: 'Travel', color: '#98FB98', views: 70000 },
         { rank: 5, category: 'Health', color: '#FF6347', views: 60000 },
         { rank: 6, category: 'Technology', color: '#8A2BE2', views: 50000 },
@@ -109,7 +109,7 @@ export class CommunityViz extends EventEmitter {
       return { ...d, row, column, y, coverFallen: false };
     });
 
-    const rectWidth = 250;
+    const rectWidth = 200;
     const rectHeight = 150;
     const paddingX = 40; // padding btn columns
 
@@ -189,9 +189,26 @@ export class CommunityViz extends EventEmitter {
       .attr('fill', 'black')
       .style('font-size', '60px')
       .style('font-weight', 'bold')
+      .style('pointer-events', 'none')
       .text(d => d.rank);
 
+    coverGroup.append('rect')
+      .attr('class', 'tape')
+      .attr('x', rectWidth / 2 - 40)
+      .attr('y', -10)
+      .attr('width', 80)
+      .attr('height', 25)
+      .attr('fill', '#f2f2cbff')
+      .attr('opacity', 0.8)
+      .attr('transform', d => {
+        const angle = (Math.random() * 10 - 5).toFixed(1);
+        return `rotate(${angle}, ${rectWidth / 2}, 0)`;
+      })
+      .style('pointer-events', 'none');
+
+
     // --- hover to drop cover ---
+
     const fallenPages = new Set();
     let nextToFallIndex = 0;
 
@@ -199,8 +216,16 @@ export class CommunityViz extends EventEmitter {
       pyramidData.map((d, i) => [d.category, i])
     );
 
+    let isAudioPlaying = false;
+
     pages.on('mouseenter', function (event, d) {
+      if (isAudioPlaying) return;
+
       const cover = d3.select(this).select('.cover-group');
+      d3.select(this).select('rect')
+        .transition()
+        .duration(300)
+        .style('filter', 'brightness(1.5)');
 
       const expectedIndex = nextToFallIndex;
       const thisIndex = fallOrder.get(d.category);
@@ -210,18 +235,49 @@ export class CommunityViz extends EventEmitter {
       fallenPages.add(d.category);
       nextToFallIndex++;
 
-      const groundY = height - rectHeight - 20;
+      const groundY = height - rectHeight;
 
-      cover.transition()
-        .duration(1000)
-        .ease(d3.easeCubicOut)
-        .attr('transform', `
-        translate(0, ${groundY - d.y}) 
-        rotate(${Math.random() * 10 - 5}, ${rectWidth / 2}, ${rectHeight / 2}) 
-        scale(1, 0.6)
-      `);
+      const delayArray = [1000, 1000, 1100, 2000, 2000, 6000];
+      const delayTime = delayArray[expectedIndex] || 1000;
+      const audioPath = `/assets/audio/ranking${expectedIndex}.mp3`;
+      const fallAudio = new Audio(audioPath);
+      fallAudio.volume = 1;
 
-      d.coverFallen = true;
+      isAudioPlaying = true;
+
+      fallAudio.addEventListener('ended', () => {
+        isAudioPlaying = false;
+      });
+
+      fallAudio.addEventListener('loadedmetadata', () => {
+        setTimeout(() => {
+          cover.transition()
+            .duration(1000)
+            .ease(d3.easeCubicOut)
+            .attr('transform', `
+          translate(0, ${groundY - d.y}) 
+          rotate(${Math.random() * 10 - 5}, ${rectWidth / 2}, ${rectHeight / 2}) 
+          scale(1, 0.6)
+        `);
+
+          d.coverFallen = true;
+        }, delayTime);
+
+        fallAudio.play().catch(error => {
+          console.error('Error playing audio:', error);
+        });
+      });
+
+      fallAudio.onerror = (error) => {
+        console.error('Error playing audio:', error);
+      };
+    });
+
+    pages.on('mouseleave', function (event, d) {
+      d3.select(this).select('rect')
+        .transition()
+        .duration(300)
+        .style('filter', 'brightness(1)');
     });
 
     // --- popup ---
