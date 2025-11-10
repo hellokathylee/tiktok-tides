@@ -133,7 +133,6 @@ export class RankingViz extends EventEmitter {
       }
     };
 
-
     // --- groups for pages ---
     // bottom-right pages are drawn first
     pyramidData.sort((a, b) => {
@@ -149,7 +148,7 @@ export class RankingViz extends EventEmitter {
       .attr('transform', d => `translate(${columnXPositions(d.row)[d.column]}, ${d.y})`)
       .style('cursor', 'pointer');
 
-    // categories
+    // --- categories page ---
     pages.append('rect')
       .attr('width', rectWidth)
       .attr('height', rectHeight)
@@ -167,7 +166,7 @@ export class RankingViz extends EventEmitter {
       .style('font-size', '24px')
       .text(d => d.category);
 
-    // cover 
+    // --- cover page ---
     const coverGroup = pages.append('g')
       .attr('class', 'cover-group');
 
@@ -206,9 +205,7 @@ export class RankingViz extends EventEmitter {
       })
       .style('pointer-events', 'none');
 
-
-    // --- hover to drop cover ---
-
+    // drop cover (on hover)
     const fallenPages = new Set();
     let nextToFallIndex = 0;
 
@@ -222,25 +219,40 @@ export class RankingViz extends EventEmitter {
       if (isAudioPlaying) return;
 
       const cover = d3.select(this).select('.cover-group');
+
       d3.select(this).select('rect')
         .transition()
         .duration(300)
         .style('filter', 'brightness(1.5)');
 
+      if (!d.coverFallen) {
+        d3.select(this).select('.cover-group text')
+          .transition()
+          .duration(300)
+          .style('fill', '#999999');
+      }
       const expectedIndex = nextToFallIndex;
       const thisIndex = fallOrder.get(d.category);
 
       if (thisIndex !== expectedIndex) return;
 
+      const scaleUp = 1.1;
+      const originX = rectWidth / 2, originY = 0;
+
+      cover.transition()
+        .duration(300)
+        .ease(d3.easeCubicOut)
+        .attr('transform', `scale(${scaleUp}) translate(${originX * (1 - scaleUp) / scaleUp}, ${originY * (1 - scaleUp) / scaleUp})`);
+
       fallenPages.add(d.category);
       nextToFallIndex++;
 
       const groundY = height - rectHeight;
-
       const delayArray = [1000, 1000, 1100, 2000, 2000, 6000];
       const delayTime = delayArray[expectedIndex] || 1000;
       const audioPath = `/assets/audio/ranking${expectedIndex}.mp3`;
       const fallAudio = new Audio(audioPath);
+
       fallAudio.volume = 1;
 
       isAudioPlaying = true;
@@ -255,10 +267,10 @@ export class RankingViz extends EventEmitter {
             .duration(1000)
             .ease(d3.easeCubicOut)
             .attr('transform', `
-          translate(0, ${groundY - d.y}) 
-          rotate(${Math.random() * 10 - 5}, ${rectWidth / 2}, ${rectHeight / 2}) 
-          scale(1, 0.6)
-        `);
+                translate(0, ${groundY - d.y}) 
+                rotate(${Math.random() * 10 - 5}, ${rectWidth / 2}, ${rectHeight / 2}) 
+                scale(1, 0.6)
+            `);
 
           d.coverFallen = true;
         }, delayTime);
@@ -266,6 +278,18 @@ export class RankingViz extends EventEmitter {
         fallAudio.play().catch(error => {
           console.error('Error playing audio:', error);
         });
+
+        const fadeOutStartTime = fallAudio.duration - 500 / 1000;
+
+        setTimeout(() => {
+          const fadeOutInterval = setInterval(() => {
+            if (fallAudio.volume > 0) {
+              fallAudio.volume -= 0.05;
+            } else {
+              clearInterval(fadeOutInterval);
+            }
+          }, 50);
+        }, fadeOutStartTime * 1000);
       });
 
       fallAudio.onerror = (error) => {
@@ -273,11 +297,16 @@ export class RankingViz extends EventEmitter {
       };
     });
 
-    pages.on('mouseleave', function (event, d) {
-      d3.select(this).select('rect')
+    pages.on('mouseleave', function (event, d) { // reset hover effects
+      d3.select(this).select('rect') // page brightness
         .transition()
         .duration(300)
         .style('filter', 'brightness(1)');
+
+      d3.select(this).select('.cover-group text') // cover rank text brightness
+        .transition()
+        .duration(300)
+        .style('fill', 'black');
     });
 
     // --- popup ---
