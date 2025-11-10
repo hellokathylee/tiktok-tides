@@ -77,6 +77,39 @@
       </section>
 
       <div id="chart" aria-label="Stopwatch-style radial visualization"></div>
+
+      <section class="record-player-section" aria-label="Top TikTok songs record player">
+        <div class="record-player-wrapper">
+          <div class="record-player-base">
+            <div class="record-disc-area">
+              <div class="record-indicator-line record-indicator-line--min" aria-hidden="true"></div>
+              <div class="record-indicator-line record-indicator-line--max" aria-hidden="true"></div>
+              <svg class="record-disc" viewBox="0 0 640 640" role="img" aria-labelledby="record-disc-title record-disc-desc">
+                <title id="record-disc-title">Record player visualization of top TikTok songs</title>
+                <desc id="record-disc-desc">Concentric rings represent songs ordered by popularity from outermost most popular to innermost least popular.</desc>
+                <g class="record-rings" data-record-rings></g>
+              </svg>
+              <div class="record-center-cap" aria-hidden="true">
+                <span class="record-center-year">2019–2025</span>
+              </div>
+            </div>
+            <div class="tonearm" data-tonearm>
+              <div class="tonearm-hinge">
+                <div class="tonearm-arm" data-tonearm-arm>
+                   <div class="tonearm-back">
+                    <div class="tonearm-head"></div>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="record-player-notes" aria-hidden="true">
+            <span class="note note--cyan">♪</span>
+            <span class="note note--magenta">♫</span>
+            <span class="note note--black">♬</span>
+          </div>
+        </div>
+      </section>
     </section>
 
     <!-- Section 2: Surge (Planets) - Fullbleed with annotation rail -->

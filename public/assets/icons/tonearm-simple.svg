@@ -1,0 +1,17 @@
+<svg width="240" height="320" viewBox="0 0 240 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#B7BCC6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <!-- hinge -->
+    <circle cx="198" cy="52" r="24" fill="rgba(255,255,255,0.35)" stroke="#B7BCC6" stroke-width="8"/>
+    <circle cx="198" cy="52" r="10" fill="#B7BCC6" stroke="#8E94A4" stroke-width="4"/>
+    <!-- tonearm shaft -->
+    <path d="M188 64 L150 142 Q136 170 112 178 L74 188" />
+    <!-- stylus lead -->
+    <line x1="74" y1="188" x2="52" y2="224"/>
+  </g>
+  <!-- cartridge -->
+  <rect x="52" y="174" width="38" height="28" rx="8" fill="#B7BCC6"/>
+</svg>
+
+
+
+
