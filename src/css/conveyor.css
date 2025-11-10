@@ -54,19 +54,60 @@
   overflow: visible;
   margin: 3rem 0;
   perspective: 1200px;
-  /* Removed background - no visible belt rectangle */
 }
 
-/* 3D Belt surface with metallic effect */
+/* Conveyor belt track at the bottom */
 .conveyor-belt-wrapper::before {
-  /* Removed - no visible belt surface */
-  display: none;
+  content: '';
+  position: absolute;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: 
+    linear-gradient(180deg,
+      rgba(50, 50, 60, 0.9) 0%,
+      rgba(40, 40, 50, 0.95) 50%,
+      rgba(30, 30, 40, 1) 100%
+    );
+  border-radius: 8px;
+  box-shadow: 
+    inset 0 4px 12px rgba(0, 0, 0, 0.5),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.3),
+    0 -2px 20px rgba(0, 0, 0, 0.4);
+  border-top: 2px solid rgba(255, 255, 255, 0.05);
+  z-index: 0;
 }
 
-/* Belt rails with 3D effect */
+/* Belt surface texture with scrolling animation */
 .conveyor-belt-wrapper::after {
-  /* Removed - no visible belt rails */
-  display: none;
+  content: '';
+  position: absolute;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 2px,
+      transparent 20px
+    );
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 0;
+  animation: belt-scroll 2s linear infinite;
+}
+
+@keyframes belt-scroll {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 20px 0;
+  }
 }
 
 .conveyor-belt {
@@ -103,8 +144,8 @@
   perspective: 1500px;
   transition: transform 300ms ease, filter 300ms ease;
   transform-style: preserve-3d;
-  /* Tilt boxes at an angle for 3D effect */
-  transform: rotateX(15deg) rotateY(-8deg);
+  /* Tilt boxes forward for 3D effect */
+  transform: rotateX(-12deg) rotateY(-5deg);
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5)) brightness(0.6) saturate(0.7);
 }
 
@@ -307,6 +348,11 @@
 
 .conveyor-box.flipped .box-back {
   transform: rotateY(0deg) translateZ(20px);
+}
+
+/* Make completed boxes look exactly like unflipped boxes - dark and consistent */
+.conveyor-box.flipped:not(.active) {
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5)) brightness(0.6) saturate(0.7);
 }
 
 /* When flipped AND active, maintain the enhanced 3D */

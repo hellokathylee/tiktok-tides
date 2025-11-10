@@ -451,6 +451,12 @@ export class ConveyorViz extends EventEmitter {
       return;
     }
 
+    // Remove active class from current box before moving
+    const currentBox = this.container.querySelector(`.conveyor-box[data-index="${this.state.currentIndex}"]`);
+    if (currentBox) {
+      currentBox.classList.remove('active');
+    }
+
     // Move to next ingredient
     this.state.currentIndex++;
     
