@@ -109,17 +109,30 @@ export class CommunityViz extends EventEmitter {
       return { ...d, row, column, y, coverFallen: false };
     });
 
-    const rectWidth = 300;
+    const rectWidth = 250;
     const rectHeight = 150;
+    const paddingX = 40; // padding btn columns
 
     const columnXPositions = (row) => {
       switch (row) {
-        case 0: return [(width - rectWidth) / 2];
-        case 1: return [(width - rectWidth * 2) / 2, (width - rectWidth * 2) / 2 + rectWidth];
-        case 2: return [(width - rectWidth * 3) / 2, (width - rectWidth * 3) / 2 + rectWidth, (width - rectWidth * 3) / 2 + rectWidth * 2];
-        default: return [];
+        case 0:
+          return [(width - rectWidth) / 2];
+        case 1:
+          return [
+            (width - rectWidth * 2 - paddingX) / 2,
+            (width - rectWidth * 2 - paddingX) / 2 + rectWidth + paddingX
+          ];
+        case 2:
+          return [
+            (width - rectWidth * 3 - paddingX * 2) / 2,
+            (width - rectWidth * 3 - paddingX * 2) / 2 + rectWidth + paddingX,
+            (width - rectWidth * 3 - paddingX * 2) / 2 + (rectWidth + paddingX) * 2
+          ];
+        default:
+          return [];
       }
     };
+
 
     // --- groups for pages ---
     // bottom-right pages are drawn first
@@ -143,7 +156,7 @@ export class CommunityViz extends EventEmitter {
       .attr('fill', d => d.color)
       .attr('stroke', 'black')
       .attr('stroke-width', 2)
-      .attr('rx', 10);
+      .attr('rx', 20);
 
     pages.append('text')
       .attr('x', rectWidth / 2)
@@ -155,15 +168,28 @@ export class CommunityViz extends EventEmitter {
       .text(d => d.category);
 
     // cover 
-    const paperCover = pages.append('rect')
+    const coverGroup = pages.append('g')
+      .attr('class', 'cover-group');
+
+    coverGroup.append('rect')
       .attr('width', rectWidth)
       .attr('height', rectHeight)
       .attr('fill', 'white')
       .attr('stroke', 'black')
       .attr('stroke-width', 2)
-      .attr('rx', 10)
+      .attr('rx', 20)
       .style('pointer-events', 'none')
       .attr('class', 'cover');
+
+    coverGroup.append('text')
+      .attr('x', rectWidth / 2)
+      .attr('y', rectHeight / 2)
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'middle')
+      .attr('fill', 'black')
+      .style('font-size', '60px')
+      .style('font-weight', 'bold')
+      .text(d => d.rank);
 
     // --- hover to drop cover ---
     const fallenPages = new Set();
@@ -174,7 +200,7 @@ export class CommunityViz extends EventEmitter {
     );
 
     pages.on('mouseenter', function (event, d) {
-      const paper = d3.select(this).select('rect:last-of-type');
+      const cover = d3.select(this).select('.cover-group');
 
       const expectedIndex = nextToFallIndex;
       const thisIndex = fallOrder.get(d.category);
@@ -186,7 +212,7 @@ export class CommunityViz extends EventEmitter {
 
       const groundY = height - rectHeight - 20;
 
-      paper.transition()
+      cover.transition()
         .duration(1000)
         .ease(d3.easeCubicOut)
         .attr('transform', `
@@ -216,15 +242,15 @@ export class CommunityViz extends EventEmitter {
         .attr('fill', 'white')
         .attr('stroke', 'black')
         .attr('stroke-width', 2)
-        .attr('rx', 10);
+        .attr('rx', 30);
 
       this.popup.append('text')
         .attr('x', 150)
         .attr('y', 50)
         .attr('text-anchor', 'middle')
         .attr('dominant-baseline', 'middle')
-        .style('font-size', '20px')
-        .text(`Category: ${d.category}`);
+        .style('font-size', '30px')
+        .text(`${d.category}`);
 
       this.popup.append('text')
         .attr('x', 150)
