@@ -106,7 +106,7 @@ export class CommunityViz extends EventEmitter {
       else { row = 2; column = i - 3; }
       const rowSpacing = 200;
       const y = 100 + row * rowSpacing;
-      return { ...d, row, column, y };
+      return { ...d, row, column, y, coverFallen: false };
     });
 
     const rectWidth = 300;
@@ -161,15 +161,28 @@ export class CommunityViz extends EventEmitter {
       .attr('fill', 'white')
       .attr('stroke', 'black')
       .attr('stroke-width', 2)
-      .attr('rx', 10);
+      .attr('rx', 10)
+      .style('pointer-events', 'none')
+      .attr('class', 'cover');
 
-    // --- Hover effect ---
+    // --- hover to drop cover ---
     const fallenPages = new Set();
+    let nextToFallIndex = 0;
+
+    const fallOrder = new Map(
+      pyramidData.map((d, i) => [d.category, i])
+    );
 
     pages.on('mouseenter', function (event, d) {
       const paper = d3.select(this).select('rect:last-of-type');
 
+      const expectedIndex = nextToFallIndex;
+      const thisIndex = fallOrder.get(d.category);
+
+      if (thisIndex !== expectedIndex) return;
+
       fallenPages.add(d.category);
+      nextToFallIndex++;
 
       const groundY = height - rectHeight - 20;
 
@@ -177,15 +190,19 @@ export class CommunityViz extends EventEmitter {
         .duration(1000)
         .ease(d3.easeCubicOut)
         .attr('transform', `
-      translate(0, ${groundY - d.y}) 
-      rotate(${Math.random() * 10 - 5}, ${rectWidth / 2}, ${rectHeight / 2}) 
-      scale(1, 0.6)
-    `);
+        translate(0, ${groundY - d.y}) 
+        rotate(${Math.random() * 10 - 5}, ${rectWidth / 2}, ${rectHeight / 2}) 
+        scale(1, 0.6)
+      `);
+
+      d.coverFallen = true;
     });
 
     // --- popup ---
     pages.on('click', (event, d) => {
       event.stopPropagation();
+
+      if (!d.coverFallen) return;  // prevent popup if cover is still on top
 
       if (this.popup) this.popup.remove();
 
