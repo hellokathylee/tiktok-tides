@@ -328,7 +328,7 @@ export class ConveyorViz extends EventEmitter {
     const hint = this.container.querySelector('.ingredient-hint');
     
     if (title) title.textContent = current.label;
-    if (hint) title.textContent = `Hint: ${current.hint}`;
+    if (hint) hint.textContent = `Hint: ${current.hint}`;
 
     // Reset guess state
     this.state.hasGuessed = false;
@@ -347,6 +347,12 @@ export class ConveyorViz extends EventEmitter {
 
     const feedbackArea = this.container.querySelector('.feedback-area');
     if (feedbackArea) feedbackArea.style.display = 'none';
+
+    // Reset reveal and next buttons
+    const revealBtn = this.container.querySelector('.reveal-btn');
+    const nextBtn = this.container.querySelector('.next-btn');
+    if (revealBtn) revealBtn.style.display = 'inline-block';
+    if (nextBtn) nextBtn.style.display = 'none';
 
     // Highlight current box
     const boxes = this.container.querySelectorAll('.conveyor-box');
@@ -429,18 +435,19 @@ export class ConveyorViz extends EventEmitter {
       currentBox.classList.add('flipped');
     }
 
-    // Show next button
+    // Hide reveal button, show next button
     const revealBtn = this.container.querySelector('.reveal-btn');
     const nextBtn = this.container.querySelector('.next-btn');
     
     if (revealBtn) revealBtn.style.display = 'none';
-    if (nextBtn) nextBtn.style.display = 'inline-block';
-
-    // If this was the last item, show restart
-    if (this.state.currentIndex >= this.data.length - 1) {
-      if (nextBtn) {
+    if (nextBtn) {
+      nextBtn.style.display = 'inline-block';
+      
+      // Update button text for last item
+      if (this.state.currentIndex >= this.data.length - 1) {
         nextBtn.textContent = 'Finish';
-        nextBtn.onclick = () => this.finish();
+      } else {
+        nextBtn.textContent = 'Next →';
       }
     }
   }
@@ -451,10 +458,11 @@ export class ConveyorViz extends EventEmitter {
       return;
     }
 
-    // Remove active class from current box before moving
+    // Remove active and flipped class from current box before moving
     const currentBox = this.container.querySelector(`.conveyor-box[data-index="${this.state.currentIndex}"]`);
     if (currentBox) {
       currentBox.classList.remove('active');
+      // Don't remove flipped - keep it revealed for review
     }
 
     // Move to next ingredient
