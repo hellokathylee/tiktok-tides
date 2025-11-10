@@ -350,9 +350,32 @@
   transform: rotateY(0deg) translateZ(20px);
 }
 
-/* Make completed boxes look exactly like unflipped boxes - dark and consistent */
+/* Make completed boxes stay turquoise - remove the darkening filter */
 .conveyor-box.flipped:not(.active) {
-  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5)) brightness(0.6) saturate(0.7);
+  /* Use same transform as base .conveyor-box */
+  transform: rotateX(-12deg) rotateY(-5deg);
+  /* Keep turquoise visible - no brightness/saturation reduction */
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
+}
+
+/* Reset completed boxes to normal turquoise (not enhanced) */
+.conveyor-box.flipped:not(.active) .box-back {
+  background-color: rgb(25, 35, 45);
+  background-image: 
+    linear-gradient(135deg, 
+      rgba(0, 255, 224, 0.35) 0%, 
+      rgba(0, 200, 180, 0.45) 50%,
+      rgba(0, 150, 140, 0.55) 100%
+    );
+  border: 3px solid rgba(0, 255, 224, 0.6);
+  border-top: 2px solid rgba(0, 255, 224, 0.8);
+  border-left: 2px solid rgba(0, 255, 224, 0.7);
+  border-bottom: 3px solid rgba(0, 150, 140, 0.5);
+  box-shadow: 
+    0 25px 50px rgba(0, 255, 224, 0.3),
+    0 10px 20px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(0, 255, 224, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
 }
 
 /* When flipped AND active, maintain the enhanced 3D */
