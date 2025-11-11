@@ -36,17 +36,56 @@ export class RankingViz extends EventEmitter {
   }
 
   async loadData() {
-    // Replace this!!!!!!!!!!!
-    this.data = {
-      categories: [
-        { rank: 1, category: 'Food', color: '#FF69B4', views: 100000 },
-        { rank: 2, category: 'Fashion', color: '#ADD8E6', views: 85000 },
-        { rank: 3, category: 'Pets', color: '#f7d661ff', views: 76000 },
-        { rank: 4, category: 'Travel', color: '#98FB98', views: 70000 },
-        { rank: 5, category: 'Health', color: '#FF6347', views: 60000 },
-        { rank: 6, category: 'Technology', color: '#8A2BE2', views: 50000 },
-      ]
+    try {
+      const rawData = await d3.csv('/data/youtube_shorts_tiktok_trends_2025.csv'); // load csv
+
+      const categoryViews = {};
+
+      rawData.forEach(row => {
+        const category = row.category;
+        const views = parseInt(row.views, 10);
+
+        if (category in categoryViews) {
+          categoryViews[category] += views;
+        } else {
+          categoryViews[category] = views;
+        }
+      });
+
+      // convert the object to an array of {category, views} objects
+      const categoryArray = Object.keys(categoryViews).map(category => ({
+        category,
+        views: categoryViews[category]
+      }));
+
+      const topCategories = categoryArray.sort((a, b) => b.views - a.views).slice(0, 6);
+
+      // update the data for viz
+      this.data = {
+        categories: topCategories.map((d, index) => ({
+          rank: index + 1,
+          category: d.category,
+          color: this.getCategoryColor(d.category),
+          views: d.views
+        }))
+      };
+
+      this.emit(VIZ_EVENTS.DATA_READY);
+    } catch (error) {
+      console.error('Error loading or processing data:', error);
+    }
+  }
+
+  getCategoryColor() {
+    const r = Math.floor(Math.random() * 128 + 128);
+    const g = Math.floor(Math.random() * 128 + 128);
+    const b = Math.floor(Math.random() * 128 + 128);
+
+    const rgbToHex = (r, g, b) => {
+      return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1).toUpperCase()}`;
     };
+
+    return rgbToHex(r, g, b);
   }
 
   mount() {
