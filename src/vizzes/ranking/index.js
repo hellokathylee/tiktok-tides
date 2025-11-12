@@ -128,15 +128,20 @@ export class RankingViz extends EventEmitter {
 
     this.container.innerHTML = '';
 
-    const bbox = this.container.getBoundingClientRect();
-    const width = bbox.width || 800;
-    const height = bbox.height || 600;
+    const width = 1000, height = 800;
 
     this.svg = d3.select(this.container)
       .append('svg')
       .attr('viewBox', `0 0 ${width} ${height}`)
       .attr('role', 'img')
       .attr('aria-label', 'Category visualization showing ranking and interaction');
+
+    const scaleFactor = 0.9;
+    const centerGroup = this.svg.append('g')
+      .attr(
+        'transform',
+        `translate(${width / 2}, ${height / 2}) scale(${scaleFactor}) translate(${-width / 2}, ${-height / 2})`
+      );
 
     const pyramidData = this.data.categories.map((d, i) => {
       let row, column;
@@ -179,7 +184,7 @@ export class RankingViz extends EventEmitter {
       return b.column - a.column;
     });
 
-    const pages = this.svg.selectAll('g.page')
+    const pages = centerGroup.selectAll('g.page')
       .data(pyramidData)
       .enter()
       .append('g')
@@ -192,8 +197,6 @@ export class RankingViz extends EventEmitter {
       .attr('width', rectWidth)
       .attr('height', rectHeight)
       .attr('fill', d => d.color)
-      .attr('stroke', 'black')
-      .attr('stroke-width', 2)
       .attr('rx', 20);
 
     pages.append('text')
@@ -213,8 +216,6 @@ export class RankingViz extends EventEmitter {
       .attr('width', rectWidth)
       .attr('height', rectHeight)
       .attr('fill', 'white')
-      .attr('stroke', 'black')
-      .attr('stroke-width', 2)
       .attr('rx', 20)
       .style('pointer-events', 'none')
       .attr('class', 'cover');
@@ -286,7 +287,9 @@ export class RankingViz extends EventEmitter {
       fallenPages.add(d.category);
       nextToFallIndex++;
 
-      const groundY = height - rectHeight;
+      const fallOffset = 50;
+      const baseOfPyramid = 100 + 2 * 200 + rectHeight;
+      const groundY = baseOfPyramid + fallOffset;
       const delayArray = [1000, 1000, 1100, 2000, 2000, 6000];
       const delayTime = delayArray[expectedIndex] || 1000;
       const audioPath = `/assets/audio/ranking${expectedIndex}.mp3`;
@@ -323,8 +326,9 @@ export class RankingViz extends EventEmitter {
         setTimeout(() => {
           const fadeOutInterval = setInterval(() => {
             if (fallAudio.volume > 0) {
-              fallAudio.volume -= 0.05;
+              fallAudio.volume = Math.max(0, fallAudio.volume - 0.05); // clamp to 0
             } else {
+              fallAudio.volume = 0;
               clearInterval(fadeOutInterval);
             }
           }, 50);
