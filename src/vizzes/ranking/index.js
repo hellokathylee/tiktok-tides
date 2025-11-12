@@ -136,11 +136,10 @@ export class RankingViz extends EventEmitter {
       .attr('role', 'img')
       .attr('aria-label', 'Category visualization showing ranking and interaction');
 
-    const scaleFactor = 0.9;
     const centerGroup = this.svg.append('g')
       .attr(
         'transform',
-        `translate(${width / 2}, ${height / 2}) scale(${scaleFactor}) translate(${-width / 2}, ${-height / 2})`
+        `translate(${width / 2}, ${height / 2}) translate(${-width / 2}, ${-height / 2})`
       );
 
     const pyramidData = this.data.categories.map((d, i) => {
@@ -209,14 +208,78 @@ export class RankingViz extends EventEmitter {
       .text(d => d.category);
 
     // --- cover page ---
+    const defs = this.svg.append('defs');
+
+    // colour gradient
+    defs.append('linearGradient')
+      .attr('id', 'paperGradient')
+      .attr('x1', '0%').attr('y1', '0%')
+      .attr('x2', '100%').attr('y2', '100%')
+      .selectAll('stop')
+      .data([
+        { offset: '0%', color: '#ffffffff' },
+        { offset: '100%', color: '#d5cfbdff' }
+      ])
+      .enter()
+      .append('stop')
+      .attr('offset', d => d.offset)
+      .attr('stop-color', d => d.color);
+
+    // shadow + paper texture
+    const combined = defs.append('filter')
+      .attr('id', 'paperCombined')
+      .attr('x', '-30%')
+      .attr('y', '-30%')
+      .attr('width', '160%')
+      .attr('height', '160%');
+
+    // shadow
+    combined.append('feDropShadow')
+      .attr('dx', 3)
+      .attr('dy', 4)
+      .attr('stdDeviation', 15)
+      .attr('flood-color', '#000')
+      .attr('flood-opacity', 0.6)
+      .attr('result', 'shadow');
+
+    // paper grain texture
+    combined.append('feTurbulence')
+      .attr('type', 'fractalNoise')
+      .attr('baseFrequency', 1)
+      .attr('numOctaves', 2)
+      .attr('stitchTiles', 'stitch')
+      .attr('result', 'noise');
+
+    combined.append('feColorMatrix')
+      .attr('in', 'noise')
+      .attr('type', 'matrix')
+      .attr('values', `
+    1 0 0 0 0
+    0 1 0 0 0
+    0 0 1 0 0
+    0 0 0 0.04 0
+  `)
+      .attr('result', 'faintNoise');
+
+    combined.append('feBlend')
+      .attr('in', 'SourceGraphic')
+      .attr('in2', 'faintNoise')
+      .attr('mode', 'multiply')
+      .attr('result', 'texturedPaper');
+
+    const merge = combined.append('feMerge');
+    merge.append('feMergeNode').attr('in', 'shadow');
+    merge.append('feMergeNode').attr('in', 'texturedPaper');
+
     const coverGroup = pages.append('g')
       .attr('class', 'cover-group');
 
     coverGroup.append('rect')
       .attr('width', rectWidth)
       .attr('height', rectHeight)
-      .attr('fill', 'white')
+      .attr('fill', 'url(#paperGradient)')
       .attr('rx', 20)
+      .attr('filter', 'url(#paperCombined)')
       .style('pointer-events', 'none')
       .attr('class', 'cover');
 
@@ -237,7 +300,7 @@ export class RankingViz extends EventEmitter {
       .attr('y', -10)
       .attr('width', 80)
       .attr('height', 25)
-      .attr('fill', '#f2f2cbff')
+      .attr('fill', '#edebb9ff')
       .attr('opacity', 0.8)
       .attr('transform', d => {
         const angle = (Math.random() * 10 - 5).toFixed(1);
@@ -306,8 +369,8 @@ export class RankingViz extends EventEmitter {
       fallAudio.addEventListener('loadedmetadata', () => {
         setTimeout(() => {
           cover.transition()
-            .duration(1000)
-            .ease(d3.easeCubicOut)
+            .duration(500)
+            .ease(d3.easeCubicIn)
             .attr('transform', `
                 translate(0, ${groundY - d.y}) 
                 rotate(${Math.random() * 10 - 5}, ${rectWidth / 2}, ${rectHeight / 2}) 
