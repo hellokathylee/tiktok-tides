@@ -1,14 +1,14 @@
 // RankingBubbleChart.js
-// Secondary view for RankingViz: top creators within a selected genre.
+// Secondary view for RankingViz: top creators within a selected category.
 
 export class RankingBubbleChart {
   /**
    * @param {string|HTMLElement} parentElement - container for the popup view
-   * @param {string} genre - initial selected genre
-   * @param {string} genreColor - fill color for circles (match sticky note color)
+   * @param {string} category - initial selected category
+   * @param {string} categoryColor - fill color for circles (match sticky note color)
    * @param {Object} options - optional config overrides
    */
-  constructor(parentElement, genre, genreColor, options = {}) {
+  constructor(parentElement, category, categoryColor, options = {}) {
     this.parentElement =
       typeof parentElement === 'string'
         ? d3.select(parentElement)
@@ -20,10 +20,10 @@ export class RankingBubbleChart {
       );
     }
 
-    this.genre = genre;
-    this.genreColor = genreColor || 'var(--color-accent)';
+    this.category = category;
+    this.categoryColor = categoryColor || 'var(--color-accent)';
     this.options = {
-      maxAuthors: 18, // show top N authors in this genre
+      maxAuthors: 18, // show top N authors in this category
       margin: { top: 40, right: 24, bottom: 32, left: 24 },
       minRadius: 14,
       maxRadius: 60,
@@ -70,7 +70,7 @@ export class RankingBubbleChart {
       .attr('role', 'img')
       .attr(
         'aria-label',
-        `Top creators in ${this.genre} community by total views`
+        `Top creators in ${this.category} community by total views`
       );
     
      // 👇 Background + border for the whole drawing area
@@ -111,7 +111,7 @@ export class RankingBubbleChart {
       .attr('x', this.innerWidth / 2)
       .attr('y', -16)
       .attr('text-anchor', 'middle')
-      .text(this.genre ? `${this.genre}Tok` : 'Creators')
+      .text(this.category ? `${this.category}Tok` : 'Creators')
       .style('font-size', '25px')
       .style('font-weight', '600');
     
@@ -165,13 +165,13 @@ export class RankingBubbleChart {
   }
 
   /**
-   * Update genre + color from parent viz (on sticky-note click).
+   * Update category + color from parent viz (on sticky-note click).
    */
-  setGenre(genre, genreColor) {
-    this.genre = genre;
-    if (genreColor) this.genreColor = genreColor;
+  setCategory(category, categoryColor) {
+    this.category = category;
+    if (categoryColor) this.categoryColor = categoryColor;
     if (this.title) {
-      this.title.text(`Top Creators in ${this.genre} Community by Total Views`);
+      this.title.text(`Top Creators in ${this.category} Community by Total Views`);
     }
     this.wrangleData();
     this.updateVis();
@@ -180,20 +180,20 @@ export class RankingBubbleChart {
   // ---------- WRANGLE DATA (Lab 3 style aggregation) ----------
 
   wrangleData() {
-    if (!this.rawData.length || !this.genre) {
+    if (!this.rawData.length || !this.category) {
       this.authorStats = [];
       return;
     }
 
-    // Filter by selected genre
-    const genreFiltered = this.rawData.filter((d) => {
-      const g = d.genre || d.Genre;
-      return g === this.genre;
+    // Filter by selected category
+    const categoryFiltered = this.rawData.filter((d) => {
+      const g = d.category || d.Category;
+      return g === this.category;
     });
 
     // Group by author handle
     const rollup = d3.rollups(
-      genreFiltered,
+      categoryFiltered,
       (v) => {
         const totalViews = d3.sum(v, (d) => d.views ?? d.playCount ?? 0);
         const totalLikes = d3.sum(v, (d) => d.likes ?? 0);
@@ -202,6 +202,7 @@ export class RankingBubbleChart {
         const totalSaves = d3.sum(v, (d) => d.saves ?? 0);
 
         const hashtagSet = new Set();
+        const genreSet = new Set();
         const soundSet = new Set();
 
         v.forEach((d) => {
@@ -223,6 +224,16 @@ export class RankingBubbleChart {
               );
           }
 
+          // Genre tags
+          const genre = d.genre || d.Genre;
+            if (genre) {
+              // allow comma-separated lists too
+              String(genre)
+                .split(/[,\s]+/)
+                .filter(Boolean)
+                .forEach((c) => genreSet.add(c));
+            }
+
           // Sounds / tracks
           const s =
             d.music_track ||
@@ -239,6 +250,7 @@ export class RankingBubbleChart {
           totalShares,
           totalSaves,
           hashtags: Array.from(hashtagSet).slice(0, 15),
+          genres: Array.from(genreSet).slice(0, 10),
           sounds: Array.from(soundSet).slice(0, 10)
         };
       },
@@ -346,7 +358,7 @@ export class RankingBubbleChart {
       .append('circle')
       .attr('class', 'author-circle')
       .attr('r', 0)
-      .attr('fill', this.genreColor)
+      .attr('fill', this.categoryColor)
       .attr('fill-opacity', 0.9);
 
     nodesEnter
@@ -374,7 +386,7 @@ export class RankingBubbleChart {
       .transition()
       .duration(400)
       .attr('r', (d) => d.r)
-      .attr('fill', this.genreColor);
+      .attr('fill', this.categoryColor);
 
     nodesMerged.select('.author-label').each(function (d) {
       const textSel = d3.select(this);
@@ -428,7 +440,7 @@ export class RankingBubbleChart {
 
         // Highlight circle with TikTok aqua
         node.select('.author-circle')
-          .attr('stroke', '#00f2ea')
+          .attr('stroke', '#484848ff')
           .attr('stroke-width', 5);
 
         this.tooltip
@@ -472,25 +484,25 @@ export class RankingBubbleChart {
     const fmt = d3.format(',d');
     return `
       <div class="tooltip-title">@${d.author}</div>
-      <div class="tooltip-metric"><span>Total views:</span> ${fmt(
+      <div class="tooltip-metric"><span>Views:</span> ${fmt(
         d.totalViews
       )}</div>
-      <div class="tooltip-metric"><span>Total likes:</span> ${fmt(
+      <div class="tooltip-metric"><span>Likes:</span> ${fmt(
         d.totalLikes
       )}</div>
-      <div class="tooltip-metric"><span>Total comments:</span> ${fmt(
+      <div class="tooltip-metric"><span>Comments:</span> ${fmt(
         d.totalComments
       )}</div>
-      <div class="tooltip-metric"><span>Total shares:</span> ${fmt(
+      <div class="tooltip-metric"><span>Shares:</span> ${fmt(
         d.totalShares
       )}</div>
-      <div class="tooltip-metric"><span>Total saves:</span> ${fmt(
+      <div class="tooltip-metric"><span>Saves:</span> ${fmt(
         d.totalSaves
       )}</div>
       ${
         d.hashtags &&
         d.hashtags.length
-          ? `<div class="tooltip-list"><span>Top hashtags:</span> ${d.hashtags.join(
+          ? `<div class="tooltip-list"><span>Hashtags:</span> ${d.hashtags.join(
               ', '
             )}</div>`
           : ''
