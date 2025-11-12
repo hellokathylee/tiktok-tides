@@ -1,5 +1,6 @@
 import { EventEmitter, prefersReducedMotion } from '../shared/utils.js';
 import { VIZ_EVENTS, DEFAULT_OPTIONS } from '../shared/types.js';
+import { RankingBubbleChart } from './rankingBubbleChart.js';
 
 export class RankingViz extends EventEmitter {
   constructor() {
@@ -421,42 +422,101 @@ export class RankingViz extends EventEmitter {
 
       if (!d.coverFallen) return;  // prevent popup if cover is still on top
 
-      if (this.popup) this.popup.remove();
-
-      this.popup = this.svg.append('g')
-        .attr('class', 'popup')
-        .attr('transform', `translate(${(width - 300) / 2}, ${height / 3})`);
-
-      this.popup.append('rect')
-        .attr('width', 300)
-        .attr('height', 200)
-        .attr('fill', 'white')
-        .attr('stroke', 'black')
-        .attr('stroke-width', 2)
-        .attr('rx', 30);
-
-      this.popup.append('text')
-        .attr('x', 150)
-        .attr('y', 50)
-        .attr('text-anchor', 'middle')
-        .attr('dominant-baseline', 'middle')
-        .style('font-size', '30px')
-        .text(`${d.category}`);
-
-      this.popup.append('text')
-        .attr('x', 150)
-        .attr('y', 100)
-        .attr('text-anchor', 'middle')
-        .attr('dominant-baseline', 'middle')
-        .style('font-size', '18px')
-        .text(`Views: ${d.views}`);
-    });
-
-    d3.select(this.container).on('click', (event) => {
       if (this.popup) {
         this.popup.remove();
+        d3.select(this.container).select('.overlay').remove();
         this.popup = null;
+        window.removeEventListener('resize', this._popupResizeHandler);
       }
+
+      // overlay
+      const overlay = d3.select(this.container)
+        .append('div')
+        .attr('class', 'overlay')
+        .style('position', 'absolute')
+        .style('top', 0)
+        .style('left', 0)
+        .style('width', '100%')
+        .style('height', '100%')
+        .style('background', 'rgba(0,0,0,0.3)')
+        .style('backdrop-filter', 'blur(0px)')
+        .style('z-index', 999)
+        .style('opacity', 0)
+        .style('transition', 'opacity 0.4s ease-out, backdrop-filter 0.4s ease-out');
+
+      setTimeout(() => {
+        overlay
+          .style('opacity', 1)
+          .style('backdrop-filter', 'blur(5px)');
+      }, 10);
+
+      // calculate dynamic size
+      const getPopupSize = () => ({
+        width: Math.min(window.innerWidth * 0.8, 700),
+        height: Math.min(window.innerHeight * 0.8, 500)
+      });
+
+      const { width, height } = getPopupSize();
+
+      // popup
+      this.popup = d3.select(this.container)
+        .append('div')
+        .attr('class', 'bubble-popup')
+        .style('position', 'absolute')
+        .style('top', '50%')
+        .style('left', '50%')
+        .style('transform', 'translate(-50%, -50%) scale(0.7)')
+        .style('opacity', 0)
+        .style('background', 'white')
+        .style('border-radius', '30px')
+        .style('padding', '16px')
+        .style('z-index', 1000)
+        .style('width', width + 'px')
+        .style('height', height + 'px')
+        .style('transition', 'transform 0.4s ease-out, opacity 0.4s ease-out, width 0.3s ease, height 0.3s ease');
+
+      setTimeout(() => {
+        this.popup
+          .style('transform', 'translate(-50%, -50%) scale(1)')
+          .style('opacity', 1);
+      }, 10);
+
+      new RankingBubbleChart(
+        this.popup.node(),
+        d.category,
+        d.color,
+        { maxAuthors: 18 }
+      );
+
+      // --- window resize ---
+      this._popupResizeHandler = () => {
+        if (!this.popup) return;
+        const { width, height } = getPopupSize();
+        this.popup
+          .style('width', width + 'px')
+          .style('height', height + 'px');
+      };
+      window.addEventListener('resize', this._popupResizeHandler);
+
+      // close popup (when clicking outside)
+      overlay.on('click', () => {
+        this.popup
+          .style('transform', 'translate(-50%, -50%) scale(0.7)')
+          .style('opacity', 0);
+
+        overlay
+          .style('opacity', 0)
+          .style('backdrop-filter', 'blur(0px)');
+
+        setTimeout(() => {
+          if (this.popup) {
+            this.popup.remove();
+            this.popup = null;
+            window.removeEventListener('resize', this._popupResizeHandler);
+          }
+          overlay.remove();
+        }, 400);
+      });
     });
   }
 }
