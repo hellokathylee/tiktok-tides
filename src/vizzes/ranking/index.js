@@ -156,6 +156,7 @@ export class RankingViz extends EventEmitter {
     const rectWidth = 200;
     const rectHeight = 150;
     const paddingX = 40; // padding btn columns
+    const cornerRadius = 20;
 
     const columnXPositions = (row) => {
       switch (row) {
@@ -193,84 +194,91 @@ export class RankingViz extends EventEmitter {
       .style('cursor', 'pointer');
 
     // --- categories page ---
-    pages.append('rect')
-      .attr('width', rectWidth)
-      .attr('height', rectHeight)
-      .attr('fill', d => d.color)
-      .attr('rx', 20);
+    const gifMap = {
+      "Pets": "https://hips.hearstapps.com/toc.h-cdn.co/assets/16/23/640x320/landscape-1465404255-tc-060816-dog-breeds.gif?resize=640:*",
+      "Fitness": "https://cdn.prod.website-files.com/66c501d753ae2a8c705375b6/67ed6a2da06e77b57e4fd380_Chest-Press-Throw.gif",
+      "Music": "https://cdn.merriammusic.com/2015/07/5CuqBlN.gif",
+      "Art": "https://images.squarespace-cdn.com/content/v1/54ecfc32e4b0866fef096797/1627925527930-83LG5C1EZEV3BZGMJU9R/Angled+Stroke+3.gif",
+      "Tech": "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3b2t2dGN1MTJsNjFsd2pzOGt5M3d4OHAxeW94Zjhkendob3Bwd3RzdCZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/WTcJBZROKjmSf5prBl/giphy.gif",
+      "Food": "https://studentlife.dal.ca/article/2019/5-tips-for-your-next--or-first--meatless-monday/_jcr_content/root/maincontent/main/article-body/center/contentfragment/par17/image.coreimg.gif/1572312628676/veggie-food.gif"
+    };
 
-    pages.append('text')
-      .attr('x', rectWidth / 2)
-      .attr('y', rectHeight / 2)
-      .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'middle')
-      .attr('fill', 'black')
-      .style('font-size', '24px')
-      .text(d => d.category);
+    // create a clipPath for rounded corners (reusable)
+    const defss = this.svg.append("defs");
+
+    defss.append("clipPath")
+      .attr("id", "roundedClip")
+      .append("rect")
+      .attr("width", rectWidth)
+      .attr("height", rectHeight)
+      .attr("rx", cornerRadius)
+      .attr("ry", cornerRadius);
+
+    pages.append("g")
+      .attr("class", "page-bg")
+      .each(function (d) {
+        const g = d3.select(this);
+
+        g.append("image")
+          .attr("href", gifMap[d.category] || "fallback.gif")
+          .attr("width", rectWidth)
+          .attr("height", rectHeight)
+          .attr("preserveAspectRatio", "xMidYMid slice")
+          .attr("clip-path", "url(#roundedClip)");
+
+        g.append("rect")
+          .attr("width", rectWidth)
+          .attr("height", rectHeight)
+          .attr("rx", cornerRadius)
+          .attr("fill", "rgba(0, 0, 0, 0.2)");
+
+        g.append("text")
+          .attr("x", rectWidth / 2)
+          .attr("y", rectHeight / 2)
+          .attr("text-anchor", "middle")
+          .attr("dominant-baseline", "middle")
+          .attr("fill", "white")
+          .style("font-size", "30px")
+          .style("font-weight", "bold")
+          // .style("text-shadow", "0 2px 5px rgba(0,0,0,0.5)")
+          .text(d.category);
+      });
 
     // --- cover page ---
     const defs = this.svg.append('defs');
 
-    // colour gradient
-    defs.append('linearGradient')
+    //  paper gradient 
+    const gradient = defs.append('linearGradient')
       .attr('id', 'paperGradient')
-      .attr('x1', '0%').attr('y1', '0%')
-      .attr('x2', '100%').attr('y2', '100%')
-      .selectAll('stop')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '100%')
+      .attr('y2', '100%');
+
+    gradient.selectAll('stop')
       .data([
-        { offset: '0%', color: '#ffffffff' },
-        { offset: '100%', color: '#d5cfbdff' }
+        { offset: '0%', color: '#ffffff' },
+        { offset: '100%', color: '#d5cfbd' }
       ])
       .enter()
       .append('stop')
       .attr('offset', d => d.offset)
       .attr('stop-color', d => d.color);
 
-    // shadow + paper texture
-    const combined = defs.append('filter')
-      .attr('id', 'paperCombined')
+    //  shadow 
+    const shadowFilter = defs.append('filter')
+      .attr('id', 'paperShadow')
       .attr('x', '-30%')
       .attr('y', '-30%')
       .attr('width', '160%')
       .attr('height', '160%');
 
-    // shadow
-    combined.append('feDropShadow')
+    shadowFilter.append('feDropShadow')
       .attr('dx', 3)
       .attr('dy', 4)
       .attr('stdDeviation', 15)
       .attr('flood-color', '#000')
-      .attr('flood-opacity', 0.6)
-      .attr('result', 'shadow');
-
-    // paper grain texture
-    combined.append('feTurbulence')
-      .attr('type', 'fractalNoise')
-      .attr('baseFrequency', 1)
-      .attr('numOctaves', 2)
-      .attr('stitchTiles', 'stitch')
-      .attr('result', 'noise');
-
-    combined.append('feColorMatrix')
-      .attr('in', 'noise')
-      .attr('type', 'matrix')
-      .attr('values', `
-    1 0 0 0 0
-    0 1 0 0 0
-    0 0 1 0 0
-    0 0 0 0.04 0
-  `)
-      .attr('result', 'faintNoise');
-
-    combined.append('feBlend')
-      .attr('in', 'SourceGraphic')
-      .attr('in2', 'faintNoise')
-      .attr('mode', 'multiply')
-      .attr('result', 'texturedPaper');
-
-    const merge = combined.append('feMerge');
-    merge.append('feMergeNode').attr('in', 'shadow');
-    merge.append('feMergeNode').attr('in', 'texturedPaper');
+      .attr('flood-opacity', 0.6);
 
     const coverGroup = pages.append('g')
       .attr('class', 'cover-group');
@@ -278,11 +286,17 @@ export class RankingViz extends EventEmitter {
     coverGroup.append('rect')
       .attr('width', rectWidth)
       .attr('height', rectHeight)
-      .attr('fill', 'url(#paperGradient)')
       .attr('rx', 20)
-      .attr('filter', 'url(#paperCombined)')
-      .style('pointer-events', 'none')
-      .attr('class', 'cover');
+      .attr('fill', 'white')
+      .attr('filter', 'url(#paperShadow)')
+      .style('pointer-events', 'none');
+
+    coverGroup.append('rect')
+      .attr('width', rectWidth)
+      .attr('height', rectHeight)
+      .attr('rx', 20)
+      .attr('fill', 'url(#paperGradient)')
+      .style('pointer-events', 'none');
 
     coverGroup.append('text')
       .attr('x', rectWidth / 2)
@@ -369,15 +383,18 @@ export class RankingViz extends EventEmitter {
 
       fallAudio.addEventListener('loadedmetadata', () => {
         setTimeout(() => {
+          const randomTilt = Math.random() * 40 - 20;
+          const randomXShift = Math.random() * 80 - 40;
+          const randomBounce = 1 + Math.random() * 0.05;
+
           cover.transition()
-            .duration(500)
+            .duration(400 + Math.random() * 400) // some fall slower
             .ease(d3.easeCubicIn)
             .attr('transform', `
-                translate(0, ${groundY - d.y}) 
-                rotate(${Math.random() * 10 - 5}, ${rectWidth / 2}, ${rectHeight / 2}) 
-                scale(1, 0.6)
-            `);
-
+                  translate(${randomXShift}, ${groundY - d.y})
+                  rotate(${randomTilt}, ${rectWidth / 2}, ${rectHeight / 2})
+                  scale(${randomBounce}, 0.6)
+              `);
           d.coverFallen = true;
         }, delayTime);
 
