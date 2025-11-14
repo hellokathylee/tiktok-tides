@@ -1,27 +1,90 @@
-// Language/Emotion vs Engagement Visualization - MVP Scaffold
-import { EventEmitter, prefersReducedMotion } from '../shared/utils.js';
-import { VIZ_EVENTS, DEFAULT_OPTIONS } from '../shared/types.js';
+// Language/Emotion vs Engagement Visualization - Word Cloud Version
+import { EventEmitter, prefersReducedMotion } from "../shared/utils.js";
+import { VIZ_EVENTS, DEFAULT_OPTIONS } from "../shared/types.js";
+
+import "../../css/emotion.css";
 
 export class EmotionViz extends EventEmitter {
   constructor() {
     super();
     this.container = null;
-    this.data = null;
+    this.rawData = null;
+
+    this.data = null; // { tokens, links, emotionCategories, emotionColors }
+
     this.state = {
       currentStep: 0,
-      filters: { layer: 'emotion' },
+      filters: { layer: "emotion" },
       highlights: [],
       animationPaused: false,
-      interactionMode: 'explore'
+      interactionMode: "explore",
     };
-    this.options = { ...DEFAULT_OPTIONS };
+
+    this.options = {
+      ...DEFAULT_OPTIONS,
+      reducedMotion: prefersReducedMotion(),
+    };
     this.mounted = false;
     this.svg = null;
+
+    // NLP bits
+    this.sentiment = null;
+
+    // --- Manual fallback lexicon so we always get non-neutral scores ----
+    this.manualLexicon = {
+      "+3": new Set([
+        "amazing",
+        "awesome",
+        "love",
+        "loving",
+        "perfect",
+        "incredible",
+        "best",
+        "beautiful",
+      ]),
+      "+2": new Set([
+        "good",
+        "great",
+        "nice",
+        "cool",
+        "funny",
+        "fun",
+        "popular",
+        "viral",
+        "trend",
+        "trendy",
+        "fyp",
+        "foryou",
+        "foryoupage",
+        "dance",
+        "cute",
+        "enjoy",
+        "wow",
+        "happy",
+        "smile",
+      ]),
+      "-2": new Set([
+        "bad",
+        "sad",
+        "angry",
+        "hate",
+        "cringe",
+        "boring",
+        "worst",
+        "tired",
+        "alone",
+        "upset",
+        "cry",
+        "crying",
+      ]),
+    };
   }
 
   async init(selector, options = {}) {
-    this.container = typeof selector === 'string' ?
-      document.querySelector(selector) : selector;
+    this.container =
+      typeof selector === "string"
+        ? document.querySelector(selector)
+        : selector;
 
     if (!this.container) {
       throw new Error(`Container not found: ${selector}`);
@@ -29,40 +92,347 @@ export class EmotionViz extends EventEmitter {
 
     this.options = { ...this.options, ...options };
 
-    // Load mock data for MVP
+    // Load data + NLP tools
     await this.loadData();
     this.emit(VIZ_EVENTS.DATA_READY);
   }
 
-  async loadData() {
-    // Mock emotion/engagement data
-    this.data = {
-      tokens: [
-        { word: 'amazing', emotion: 'joy', sentiment: 0.9, engagement: 0.85, count: 1523 },
-        { word: 'love', emotion: 'joy', sentiment: 0.8, engagement: 0.78, count: 2341 },
-        { word: 'excited', emotion: 'surprise', sentiment: 0.7, engagement: 0.72, count: 892 },
-        { word: 'sad', emotion: 'sadness', sentiment: -0.6, engagement: 0.65, count: 567 },
-        { word: 'angry', emotion: 'anger', sentiment: -0.8, engagement: 0.82, count: 423 },
-        { word: 'fear', emotion: 'fear', sentiment: -0.7, engagement: 0.68, count: 334 },
-        { word: 'disgusting', emotion: 'disgust', sentiment: -0.9, engagement: 0.71, count: 234 },
-        { word: 'beautiful', emotion: 'joy', sentiment: 0.85, engagement: 0.88, count: 1892 },
-        { word: 'terrible', emotion: 'fear', sentiment: -0.75, engagement: 0.69, count: 445 },
-        { word: 'wow', emotion: 'surprise', sentiment: 0.6, engagement: 0.75, count: 1234 }
-      ],
-      emotionCategories: ['joy', 'surprise', 'sadness', 'anger', 'fear', 'disgust'],
-      emotionColors: {
-        joy: '#FFEB3B',
-        surprise: '#00FFE0',
-        sadness: '#3B82F6',
-        anger: '#EF4444',
-        fear: '#8B5CF6',
-        disgust: '#10B981'
-      }
-    };
+  // --- NLP / sentiment -------------------------------------------------------
+  async initNLP() {
+    // If using modules:
+    //   import Sentiment from 'sentiment';
+    //   this.sentiment = new Sentiment();
+    if (this.sentiment) return;
+
+    if (window.Sentiment) {
+      this.sentiment = new window.Sentiment();
+    } else {
+      console.warn(
+        "Sentiment library not found; using manual lexicon for emotions. " +
+          'Include it via <script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.1/dist/sentiment.min.js"></script>'
+      );
+    }
   }
 
+  lexiconScore(word) {
+    const w = word.toLowerCase();
+    if (this.manualLexicon["+3"].has(w)) return 3;
+    if (this.manualLexicon["+2"].has(w)) return 2;
+    if (this.manualLexicon["-2"].has(w)) return -2;
+    return 0;
+  }
+
+  // Less strict mapping: add a small jitter so scores spread into more buckets
+  mapSentimentToEmotion(score) {
+    // jitter in [-0.6, 0.6]
+    const jitter = (Math.random() - 0.5) * 1.2;
+    const s = score + jitter;
+
+    if (s <= -1.2) return "anger"; // strong negative
+    if (s <= -0.4) return "sadness"; // moderate negative
+    if (s < 0) return "disappointment"; // mild negative
+    if (s < 0.6) return "neutral"; // near zero
+    if (s < 1.4) return "hope"; // mild positive
+    if (s < 2.4) return "joy"; // solid positive
+    return "excitement"; // very positive
+  }
+
+  // --- Data loading + processing --------------------------------------------
+  async loadData() {
+    try {
+      await this.initNLP();
+
+      const [data] = await Promise.all([
+        // UPDATED PATH
+        d3.csv("/data/cleaned_tiktok_data.csv", d3.autoType),
+      ]);
+
+      this.rawData = data;
+
+      // Use only rows that actually have caption text
+      const rows = data.filter(
+        (d) => typeof d?.text === "string" && d.text.trim().length > 0
+      );
+
+      // Basic stopword list (extend as needed)
+      const stopwords = new Set([
+        "the",
+        "and",
+        "for",
+        "that",
+        "this",
+        "with",
+        "have",
+        "has",
+        "was",
+        "are",
+        "but",
+        "not",
+        "just",
+        "you",
+        "your",
+        "they",
+        "them",
+        "their",
+        "its",
+        "it's",
+        "ive",
+        "i've",
+        "cant",
+        "can't",
+        "didnt",
+        "didn't",
+        "im",
+        "i'm",
+        "like",
+        "get",
+        "got",
+        "tiktok",
+        "http",
+        "https",
+        "www",
+        "com",
+      ]);
+
+      // Keep only simple English tokens: a–z after lowercasing
+      const englishWordRegex = /^[a-z]+$/;
+
+      // Small list of common English words for a rough language heuristic
+      const englishCommonWords = new Set([
+        "the",
+        "and",
+        "for",
+        "that",
+        "this",
+        "with",
+        "have",
+        "has",
+        "was",
+        "were",
+        "are",
+        "is",
+        "on",
+        "in",
+        "of",
+        "to",
+        "from",
+        "it",
+        "its",
+        "as",
+        "at",
+        "by",
+        "or",
+        "if",
+        "but",
+        "so",
+        "just",
+        "not",
+        "no",
+        "yes",
+        "you",
+        "your",
+        "yours",
+        "me",
+        "my",
+        "we",
+        "our",
+        "ours",
+        "they",
+        "them",
+        "their",
+        "what",
+        "when",
+        "where",
+        "why",
+        "how",
+        "who",
+        "which",
+        "can",
+        "could",
+        "do",
+        "did",
+        "done",
+        "will",
+        "would",
+        "all",
+        "any",
+        "some",
+        "more",
+        "most",
+        "very",
+        "too",
+        "also",
+        "only",
+        "new",
+        "now",
+        "one",
+        "two",
+        "make",
+        "made",
+        "get",
+        "got",
+        "see",
+        "look",
+        "watch",
+        "video",
+        "music",
+        "song",
+        "dance",
+        "trend",
+        "trending",
+        "viral",
+        "fyp",
+        "foryou",
+        "foryoupage",
+        "love",
+        "like",
+        "good",
+        "great",
+        "best",
+        "fun",
+        "funny",
+        "cool",
+        "nice",
+        "happy",
+        "sad",
+        "bad",
+        "girl",
+        "boy",
+        "girls",
+        "boys",
+        "school",
+        "day",
+        "time",
+        "life",
+        "people",
+        "friend",
+        "friends",
+      ]);
+
+      const wordMap = new Map();
+
+      // Build word frequencies + which captions they appear in (for similarity)
+      rows.forEach((row, rowIndex) => {
+        const text = String(row.text).toLowerCase();
+        const rawTokens = text.match(/\b[\p{L}\p{N}'’]+\b/gu) || [];
+
+        // Normalize + keep only a–z words
+        const normalizedTokens = rawTokens
+          .map((rawToken) => rawToken.replace(/['’]/g, ""))
+          .filter((token) => token && englishWordRegex.test(token));
+
+        if (!normalizedTokens.length) return;
+
+        // Caption-level English heuristic:
+        // if too few tokens are common English words, treat caption as non-English
+        const englishCount = normalizedTokens.filter((t) =>
+          englishCommonWords.has(t)
+        ).length;
+        const englishRatio = englishCount / normalizedTokens.length;
+
+        // Threshold can be tuned; 0.3 works well to drop Spanish/French, etc.
+        if (englishRatio < 0.3) {
+          return; // skip this caption entirely
+        }
+
+        normalizedTokens.forEach((token) => {
+          if (stopwords.has(token)) return;
+          if (token.length <= 2) return; // drop super-short words
+
+          let entry = wordMap.get(token);
+          if (!entry) {
+            entry = {
+              word: token,
+              count: 0,
+              docs: new Set(), // which caption indices it appears in
+            };
+            wordMap.set(token, entry);
+          }
+          entry.count += 1;
+          entry.docs.add(rowIndex);
+        });
+      });
+
+      // Take the top N most frequent words to keep layout manageable
+      let tokens = Array.from(wordMap.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 120);
+
+      // --- Emotion colors: more categories + more colors --------------------
+      const emotionColors = {
+        anger: "#dc2626", // red
+        sadness: "#2563eb", // blue
+        disappointment: "#7c3aed", // purple
+        neutral: "#6b7280", // gray
+        hope: "#22c55e", // green
+        joy: "#a3e635", // lime
+        excitement: "#f97316", // orange
+      };
+      const emotionCategories = new Set();
+
+      // Assign sentiment + emotion bucket
+      tokens.forEach((t) => {
+        let score = 0;
+
+        // Try external sentiment library if present
+        if (this.sentiment) {
+          const res = this.sentiment.analyze(t.word);
+          score = res.score || 0;
+        }
+
+        // Fallback / override with manual lexicon if still neutral
+        if (!this.sentiment || score === 0) {
+          score = this.lexiconScore(t.word);
+        }
+
+        t.sentiment = score;
+        t.emotion = this.mapSentimentToEmotion(score);
+        emotionCategories.add(t.emotion);
+      });
+
+      // Build a co-occurrence–based similarity graph to control distances
+      const links = [];
+      for (let i = 0; i < tokens.length; i++) {
+        for (let j = i + 1; j < tokens.length; j++) {
+          const a = tokens[i].docs;
+          const b = tokens[j].docs;
+
+          let intersectionSize = 0;
+          for (const id of a) {
+            if (b.has(id)) intersectionSize++;
+          }
+          if (!intersectionSize) continue;
+
+          const unionSize = a.size + b.size - intersectionSize;
+          const similarity = unionSize ? intersectionSize / unionSize : 0;
+          if (similarity > 0) {
+            links.push({
+              source: i,
+              target: j,
+              similarity,
+            });
+          }
+        }
+      }
+
+      // Clean up heavy doc sets before storing
+      tokens.forEach((t) => delete t.docs);
+
+      this.data = {
+        tokens,
+        links,
+        emotionCategories: Array.from(emotionCategories),
+        emotionColors,
+      };
+    } catch (err) {
+      console.error("Error loading TikTok data for EmotionViz:", err);
+    }
+  }
+
+  // --- Lifecycle ------------------------------------------------------------
+
   mount() {
-    if (this.mounted) return;
+    if (this.mounted || !this.data) return;
     this.render();
     this.setupLegend();
     this.mounted = true;
@@ -71,7 +441,7 @@ export class EmotionViz extends EventEmitter {
 
   unmount() {
     if (!this.mounted) return;
-    this.container.innerHTML = '';
+    this.container.innerHTML = "";
     this.mounted = false;
     this.emit(VIZ_EVENTS.EXIT_COMPLETE);
   }
@@ -88,7 +458,7 @@ export class EmotionViz extends EventEmitter {
 
     switch (step) {
       case 9:
-        this.toggleLayer('sentiment');
+        this.toggleLayer("sentiment");
         break;
       case 10:
         this.highlightHighEngagement();
@@ -120,200 +490,242 @@ export class EmotionViz extends EventEmitter {
     return this.data !== null;
   }
 
+  // --- Rendering: word cloud with speech bubbles ----------------------------
   render() {
     if (!this.data) return;
 
-    // Clear container
-    this.container.innerHTML = '';
+    const { tokens, links, emotionColors } = this.data;
 
-    // Get dimensions
+    // Clear container
+    this.container.innerHTML = "";
+
+    // Dimensions
     const bbox = this.container.getBoundingClientRect();
-    const width = bbox.width || 800;
-    const height = bbox.height || 600;
+    const width = this.options.width || bbox.width || 800;
+    const height = this.options.height || bbox.height || 600;
 
     // Create SVG
-    this.svg = d3.select(this.container)
-      .append('svg')
-      .attr('viewBox', `0 0 ${width} ${height}`)
-      .attr('role', 'img')
-      .attr('aria-label', 'Bubble cloud showing emotion and engagement correlation');
+    this.svg = d3
+      .select(this.container)
+      .append("svg")
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("role", "img")
+      .attr(
+        "aria-label",
+        "Word cloud showing sentiment-colored speech bubbles for TikTok caption words"
+      );
 
-    // Scales
-    const xScale = d3.scaleLinear()
-      .domain([-1, 1])  // Sentiment range
-      .range([50, width - 50]);
+    // Size scale: frequency → font size / bubble size
+    const sizeScale = d3
+      .scaleSqrt()
+      .domain(d3.extent(tokens, (d) => d.count))
+      .range([12, 42]);
 
-    const yScale = d3.scaleLinear()
-      .domain([0, 1])  // Engagement range
-      .range([height - 50, 50]);
+    // Pre-compute estimated bubble box sizes (for collision + drawing)
+    const paddingX = 10;
+    const paddingY = 6;
+    tokens.forEach((t) => {
+      const fontSize = sizeScale(t.count);
+      const textWidth = t.word.length * fontSize * 0.6; // rough estimate
+      t.fontSize = fontSize;
+      t.boxWidth = textWidth + paddingX * 2;
+      t.boxHeight = fontSize + paddingY * 2;
+    });
 
-    const sizeScale = d3.scaleSqrt()
-      .domain([0, d3.max(this.data.tokens, d => d.count)])
-      .range([10, 50]);
-
-    // Create bubble force simulation
-    const simulation = d3.forceSimulation(this.data.tokens)
-      .force('x', d3.forceX(d => xScale(d.sentiment)).strength(0.5))
-      .force('y', d3.forceY(d => yScale(d.engagement)).strength(0.5))
-      .force('collision', d3.forceCollide(d => sizeScale(d.count) + 2))
+    // Force simulation:
+    const simulation = d3
+      .forceSimulation(tokens)
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("charge", d3.forceManyBody().strength(-20))
+      .force(
+        "link",
+        d3
+          .forceLink(links)
+          .id((d, i) => i)
+          .distance((d) => 220 * (1 - d.similarity) + 30) // closer if more similar
+          .strength((d) => 0.5 * d.similarity)
+      )
+      .force(
+        "collision",
+        d3.forceCollide((d) => Math.max(d.boxWidth, d.boxHeight) / 2 + 8)
+      )
       .stop();
 
-    // Run simulation
-    for (let i = 0; i < 120; i++) simulation.tick();
+    for (let i = 0; i < 250; i++) simulation.tick();
 
-    // Draw bubbles
-    const bubbles = this.svg.selectAll('.bubble')
-      .data(this.data.tokens)
-      .join('g')
-      .attr('class', 'bubble')
-      .attr('transform', d => `translate(${d.x}, ${d.y})`);
+    // where you create `bubbles`
+    const bubbles = this.svg
+      .selectAll(".word-bubble")
+      .data(tokens)
+      .join("g")
+      .attr("class", "word-bubble")
+      .attr("transform", (d) => `translate(${d.x}, ${d.y})`);
 
-    // Bubble circles
-    bubbles.append('circle')
-      .attr('r', d => sizeScale(d.count))
-      .attr('fill', d => this.data.emotionColors[d.emotion])
-      .attr('opacity', 0.7)
-      .attr('stroke', 'var(--color-text-primary)')
-      .attr('stroke-width', 1);
+    // Rounded rect for speech bubble body
+    bubbles
+      .append("rect")
+      .attr("class", "bubble-body") // 👈 add class
+      .attr("x", (d) => -d.boxWidth / 2)
+      .attr("y", (d) => -d.boxHeight / 2)
+      .attr("width", (d) => d.boxWidth)
+      .attr("height", (d) => d.boxHeight)
+      .attr("rx", 16) // a bit rounder
+      .attr("ry", 16)
+      .attr("fill", (d) => emotionColors[d.emotion] || "#e5e7eb")
+      .attr("stroke", "transparent") // let CSS handle visible stroke
+      .attr("opacity", 0.95);
 
-    // Bubble labels
-    bubbles.append('text')
-      .text(d => d.word)
-      .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'middle')
-      .style('fill', 'var(--color-text-primary)')
-      .style('font-size', d => `${Math.min(sizeScale(d.count) / 3, 14)}px`)
-      .style('pointer-events', 'none');
+    // Small triangle tail for the speech bubble
+    // Placed at the BOTTOM, slightly to the right (not centered)
+    bubbles
+      .append("path")
+      .attr("class", "bubble-tail")
+      .attr("d", (d) => {
+        const tailWidth = 12;
+        const tailHeight = 9;
 
-    // Add axes labels
-    this.addAxesLabels(width, height);
+        // Bottom edge of the rect in local coords
+        const y = d.boxHeight / 2 - 1;
 
-    // Add interactions
+        // Shifted toward the right, not centered
+        const baseLeft = d.boxWidth / 2 - tailWidth - 12; // tweak "- 4" to move it
+        const baseRight = baseLeft + tailWidth;
+        const tipX = (baseLeft + baseRight) / 2;
+        const tipY = y + tailHeight; // tip points downward
+
+        return `M ${baseLeft} ${y}
+                L ${baseRight} ${y}
+                L ${tipX} ${tipY}
+                Z`;
+      })
+      .attr("fill", (d) => emotionColors[d.emotion] || "#e5e7eb")
+      .attr("stroke", "transparent")
+      .attr("opacity", 0.95);
+
+    // Word text
+    bubbles
+      .append("text")
+      .text((d) => d.word)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .style("font-size", (d) => `${d.fontSize}px`)
+      .style("fill", "var(--color-text-primary, #020617)")
+      .style("pointer-events", "none");
+
+    // Interactions (hover / click)
     this.addBubbleInteractions(bubbles);
 
-    // Initial animation
+    // Simple fade-in animation
     if (!this.options.reducedMotion) {
       bubbles
-        .attr('transform', `translate(${width / 2}, ${height / 2})`)
+        .attr("opacity", 0)
         .transition()
-        .duration(800)
-        .delay((d, i) => i * 50)
-        .attr('transform', d => `translate(${d.x}, ${d.y})`);
+        .duration(700)
+        .delay((d, i) => i * 20)
+        .attr("opacity", 1);
     }
   }
 
-  addAxesLabels(width, height) {
-    // X-axis label (sentiment)
-    this.svg.append('text')
-      .attr('x', width / 2)
-      .attr('y', height - 10)
-      .attr('text-anchor', 'middle')
-      .style('fill', 'var(--color-text-secondary)')
-      .text('← Negative Sentiment | Positive Sentiment →');
-
-    // Y-axis label (engagement)
-    this.svg.append('text')
-      .attr('x', 20)
-      .attr('y', height / 2)
-      .attr('text-anchor', 'middle')
-      .attr('transform', `rotate(-90, 20, ${height / 2})`)
-      .style('fill', 'var(--color-text-secondary)')
-      .text('Engagement Rate →');
-  }
-
-  addBubbleInteractions(bubbles) {
-    bubbles
-      .on('mouseenter', (event, d) => {
-        d3.select(event.currentTarget).select('circle')
-          .transition()
-          .duration(200)
-          .attr('opacity', 1)
-          .attr('stroke-width', 3);
-
-        // Show info in detail drawer
-        this.showBubbleDetail(d);
-      })
-      .on('mouseleave', (event) => {
-        d3.select(event.currentTarget).select('circle')
-          .transition()
-          .duration(200)
-          .attr('opacity', 0.7)
-          .attr('stroke-width', 1);
-      })
-      .on('click', (event, d) => {
-        this.openDetailDrawer(d);
-      });
-  }
-
+  // --- Legend + interactions ------------------------------------------------
   setupLegend() {
-    // Populate emotion legend in sidebar
-    const legendPanel = document.querySelector('.emotion-legend');
-    if (!legendPanel) return;
+    const legendPanel = document.querySelector(".emotion-legend");
+    if (!legendPanel || !this.data) return;
 
-    this.data.emotionCategories.forEach(emotion => {
-      const item = document.createElement('li');
+    legendPanel.innerHTML = "";
+
+    this.data.emotionCategories.forEach((emotion) => {
+      const item = document.createElement("li");
       item.innerHTML = `
-        <span style="display: inline-block; width: 12px; height: 12px;
-               background: ${this.data.emotionColors[emotion]};
-               border-radius: 50%; margin-right: 8px;"></span>
+        <span style="
+          display:inline-block;
+          width:12px;
+          height:12px;
+          background:${this.data.emotionColors[emotion]};
+          border-radius:50%;
+          margin-right:8px;
+        "></span>
         ${emotion}
       `;
-      item.style.display = 'flex';
-      item.style.alignItems = 'center';
+      item.style.display = "flex";
+      item.style.alignItems = "center";
       legendPanel.appendChild(item);
     });
   }
 
+  addBubbleInteractions(bubbles) {
+    bubbles
+      .on("mouseenter", (event, d) => {
+        d3.select(event.currentTarget)
+          .select("rect")
+          .transition()
+          .duration(200)
+          .attr("stroke-width", 3);
+
+        this.showBubbleDetail(d);
+      })
+      .on("mouseleave", (event) => {
+        d3.select(event.currentTarget)
+          .select("rect")
+          .transition()
+          .duration(200)
+          .attr("stroke-width", 1.5);
+      })
+      .on("click", (event, d) => {
+        this.openDetailDrawer(d);
+      });
+  }
+
   showBubbleDetail(data) {
-    // Show detail in a tooltip or info panel
-    const detailContent = document.querySelector('.drawer-content');
+    const detailContent = document.querySelector(".drawer-content");
     if (detailContent) {
       detailContent.innerHTML = `
         <h3>${data.word}</h3>
-        <p>Emotion: ${data.emotion}</p>
-        <p>Sentiment: ${data.sentiment.toFixed(2)}</p>
-        <p>Engagement: ${(data.engagement * 100).toFixed(1)}%</p>
-        <p>Count: ${data.count}</p>
+        <p>Emotion bucket: <strong>${data.emotion}</strong></p>
+        <p>Sentiment score: ${
+          data.sentiment?.toFixed ? data.sentiment.toFixed(2) : data.sentiment
+        }</p>
+        <p>Frequency (word count): ${data.count}</p>
       `;
     }
   }
 
   openDetailDrawer(data) {
-    const drawer = document.querySelector('.detail-drawer');
+    const drawer = document.querySelector(".detail-drawer");
     if (drawer) {
-      drawer.setAttribute('aria-hidden', 'false');
+      drawer.setAttribute("aria-hidden", "false");
       this.showBubbleDetail(data);
     }
 
-    // Setup close button
-    const closeBtn = document.querySelector('.drawer-close');
-    if (closeBtn) {
+    const closeBtn = document.querySelector(".drawer-close");
+    if (closeBtn && drawer) {
       closeBtn.onclick = () => {
-        drawer.setAttribute('aria-hidden', 'true');
+        drawer.setAttribute("aria-hidden", "true");
       };
     }
   }
 
+  // --- Misc behaviors used by scrollytelling driver ------------------------
   toggleLayer(layer) {
-    // Toggle between emotion and sentiment view - simplified for MVP
-    console.log(`Toggling to ${layer} layer`);
+    console.log(`Toggling to "${layer}" layer`);
   }
 
   highlightHighEngagement() {
-    if (!this.svg) return;
+    // Reinterpreted as "highlight high-frequency words"
+    if (!this.svg || !this.data) return;
 
-    // Highlight bubbles with high engagement
-    this.svg.selectAll('.bubble')
+    const maxCount = d3.max(this.data.tokens, (d) => d.count) || 1;
+    const threshold = maxCount * 0.6;
+
+    this.svg
+      .selectAll(".word-bubble")
       .transition()
       .duration(400)
-      .attr('opacity', d => d.engagement > 0.75 ? 1 : 0.3);
+      .attr("opacity", (d) => (d.count >= threshold ? 1 : 0.25));
   }
 
   emphasizeOutlines() {
-    // Reduced motion alternative - emphasize outlines
     if (this.svg) {
-      this.svg.selectAll('.bubble circle')
-        .attr('stroke-width', 3);
+      this.svg.selectAll(".word-bubble rect").attr("stroke-width", 3);
     }
   }
 }

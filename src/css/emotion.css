@@ -1,0 +1,32 @@
+/* Group: whole bubble */
+.word-bubble {
+  cursor: pointer;
+  transition: transform 150ms ease-out;
+}
+
+/* Rounded pill + shadow */
+.word-bubble .bubble-body {
+  stroke: rgba(15, 23, 42, 0.9); /* dark outline */
+  stroke-width: 1.5;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+/* Tail matches the body and shares the shadow */
+.word-bubble .bubble-tail {
+  /* stroke: rgba(15, 23, 42, 0.9); */
+  /* stroke-width: 1; */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+/* Text style inside bubble */
+.word-bubble text {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.word-bubble:hover .bubble-body {
+  stroke-width: 2;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+}
