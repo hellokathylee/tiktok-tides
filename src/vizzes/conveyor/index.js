@@ -294,11 +294,26 @@ export class ConveyorViz extends EventEmitter {
     const belt = this.container.querySelector('.conveyor-belt');
     if (!belt) return;
 
-    // Calculate offset to center current box
-    const boxWidth = 220; // Box width + gap
-    const offset = -(this.state.currentIndex * boxWidth);
-    
-    belt.style.transform = `translateX(calc(50% - 110px + ${offset}px))`;
+    // Center the current box using actual sizes (responsive-friendly)
+    const currentBox = this.container.querySelector(
+      `.conveyor-box[data-index="${this.state.currentIndex}"]`
+    );
+    if (!currentBox) return;
+
+    // Get live dimensions
+    const styles = window.getComputedStyle(belt);
+    // Flex row gap is exposed as column-gap/gap depending on browser
+    const gapStr = styles.columnGap || styles.gap || '0px';
+    const gap = parseFloat(gapStr) || 0;
+    const boxW = currentBox.getBoundingClientRect().width;
+    const step = boxW + gap; // width of one box plus the gap between boxes
+
+    // Half width of the box for proper centering without hardcoding
+    const halfBox = boxW / 2;
+    const offset = -(this.state.currentIndex * step);
+
+    // Keep the original centering approach but with dynamic values
+    belt.style.transform = `translateX(calc(50% - ${halfBox}px + ${offset}px))`;
   }
 
   startConveyor() {
