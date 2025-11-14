@@ -44,42 +44,42 @@ export class ConveyorViz extends EventEmitter {
         label: 'Video Duration',
         answer: '15-30 seconds',
         hint: 'Sweet spot for engagement',
-        // category: 'Content'
+        options: ['5 minutes', '1-2 seconds', '15-30 seconds', '2-3 minutes']
       },
       {
         id: 'audio',
         label: 'Trending Audio',
         answer: 'Viral sounds',
         hint: 'What your ears catch first',
-        // category: 'Audio'
+        options: ['Silence', 'White noise', 'Original voice only', 'Viral sounds']
       },
       {
         id: 'hashtags',
         label: 'Hashtag Strategy',
         answer: '3-5 tags',
         hint: 'Not too many, not too few',
-        // category: 'Discovery'
+        options: ['3-5 tags', 'No tags', '1 tag', '20+ tags']
       },
       {
         id: 'timing',
         label: 'Post Timing',
         answer: '6-10 AM or 7-11 PM',
         hint: 'When your audience scrolls',
-        // category: 'Strategy'
+        options: ['3-4 PM weekdays only', 'Anytime', '2-4 AM weekdays', '6-10 AM or 7-11 PM']
       },
       {
         id: 'emotion',
         label: 'Emotional Hook',
         answer: 'Joy or Surprise',
         hint: 'What makes people share',
-        // category: 'Content'
+        options: ['Confusion', 'Neutral tone', 'Anger', 'Joy or Surprise']
       },
       {
         id: 'duet',
         label: 'Collaboration',
         answer: 'Duet/Stitch enabled',
         hint: 'Let others remix your content',
-        // category: 'Features'
+        options: ['Comments disabled', 'No sharing', 'Original audio only', 'Duet/Stitch enabled']
       }
     ];
   }
@@ -229,21 +229,10 @@ export class ConveyorViz extends EventEmitter {
       <div class="current-ingredient">
         <h4 class="ingredient-title"></h4>
         <p class="ingredient-hint"></p>
+        <p class="attempts-remaining" aria-live="polite"></p>
       </div>
       
-      <div class="guess-input-wrapper">
-        <label for="guess-input" class="guess-label">Your Guess:</label>
-        <input 
-          type="text" 
-          id="guess-input" 
-          class="guess-input" 
-          placeholder="Type your answer..."
-          aria-label="Enter your guess for the ingredient"
-        />
-        <button class="btn-primary submit-guess-btn" aria-label="Submit your guess">
-          Submit Guess
-        </button>
-      </div>
+      <div class="options-grid" role="group" aria-label="Answer choices"></div>
 
       <div class="feedback-area" style="display:none;">
         <div class="feedback-message"></div>
@@ -268,15 +257,13 @@ export class ConveyorViz extends EventEmitter {
     const restartBtn = this.container.querySelector('.restart-btn');
     restartBtn?.addEventListener('click', () => this.restart());
 
-    // Submit guess
-    const submitBtn = this.container.querySelector('.submit-guess-btn');
-    submitBtn?.addEventListener('click', () => this.submitGuess());
-
-    // Enter key in input
-    const input = this.container.querySelector('.guess-input');
-    input?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        this.submitGuess();
+    // Option buttons (event delegation)
+    const panel = this.container.querySelector('.interaction-panel');
+    panel?.addEventListener('click', (e) => {
+      const target = e.target;
+      if (target && target.classList?.contains('option-btn') && !target.disabled) {
+        const value = target.getAttribute('data-value');
+        this.submitGuess(value, target);
       }
     });
 
@@ -340,6 +327,7 @@ export class ConveyorViz extends EventEmitter {
 
     const title = this.container.querySelector('.ingredient-title');
     const hint = this.container.querySelector('.ingredient-hint');
+    const attemptsEl = this.container.querySelector('.attempts-remaining');
     
     if (title) title.textContent = current.label;
     if (hint) hint.textContent = `Hint: ${current.hint}`;
@@ -348,16 +336,27 @@ export class ConveyorViz extends EventEmitter {
     this.state.hasGuessed = false;
     this.state.revealed = false;
     this.state.currentGuess = '';
+    this.state.attemptsLeft = 3; // allow a few tries
 
-    // Reset UI
-    const input = this.container.querySelector('.guess-input');
-    if (input) {
-      input.value = '';
-      input.disabled = false;
+    if (attemptsEl) attemptsEl.textContent = `Attempts left: ${this.state.attemptsLeft}`;
+
+    // Render options
+    const optionsWrap = this.container.querySelector('.options-grid');
+    if (optionsWrap) {
+      optionsWrap.innerHTML = '';
+      const options = (current.options && current.options.length
+        ? current.options.slice()
+        : this.generateOptions(current.answer));
+      const shuffled = this.shuffle(options);
+      shuffled.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.type = 'button';
+        btn.setAttribute('data-value', opt);
+        btn.textContent = opt;
+        optionsWrap.appendChild(btn);
+      });
     }
-
-    const submitBtn = this.container.querySelector('.submit-guess-btn');
-    if (submitBtn) submitBtn.disabled = false;
 
     const feedbackArea = this.container.querySelector('.feedback-area');
     if (feedbackArea) feedbackArea.style.display = 'none';
@@ -374,27 +373,20 @@ export class ConveyorViz extends EventEmitter {
       box.classList.toggle('active', i === this.state.currentIndex);
     });
 
-    // Focus input
-    input?.focus();
+    // Focus first option for accessibility
+    const firstOpt = this.container.querySelector('.option-btn');
+    firstOpt?.focus();
   }
 
-  submitGuess() {
-    const input = this.container.querySelector('.guess-input');
-    const guess = input?.value.trim();
-
-    if (!guess) {
-      this.showFeedback('Please enter a guess!', 'warning');
-      return;
-    }
+  submitGuess(guess, btnEl) {
+    if (!guess) return;
 
     this.state.hasGuessed = true;
     this.state.currentGuess = guess;
     this.state.totalAttempts++;
 
-    // Disable input
-    input.disabled = true;
-    const submitBtn = this.container.querySelector('.submit-guess-btn');
-    submitBtn.disabled = true;
+    // Disable clicked option to prevent repeat
+    if (btnEl) btnEl.disabled = true;
 
     // Check answer (fuzzy match)
     const current = this.data[this.state.currentIndex];
@@ -403,11 +395,23 @@ export class ConveyorViz extends EventEmitter {
     if (isCorrect) {
       this.state.score++;
       this.showFeedback(`🎉 Correct! "${current.answer}"`, 'correct');
+      // Disable all options after correct
+      this.disableAllOptions();
       
       // Auto-reveal after short delay
       setTimeout(() => this.revealAnswer(), 1000);
     } else {
-      this.showFeedback(`Not quite! Try again or reveal the answer.`, 'incorrect');
+      this.state.attemptsLeft = Math.max(0, (this.state.attemptsLeft || 1) - 1);
+      const attemptsEl = this.container.querySelector('.attempts-remaining');
+      if (attemptsEl) attemptsEl.textContent = `Attempts left: ${this.state.attemptsLeft}`;
+
+      if (this.state.attemptsLeft > 0) {
+        this.showFeedback(`Not quite! Try again.`, 'incorrect');
+      } else {
+        this.showFeedback(`Out of attempts. You can reveal the answer.`, 'warning');
+        // Disable remaining options
+        this.disableAllOptions();
+      }
     }
 
     // Update score
@@ -416,6 +420,26 @@ export class ConveyorViz extends EventEmitter {
     // Show reveal/next buttons
     const feedbackArea = this.container.querySelector('.feedback-area');
     feedbackArea.style.display = 'block';
+  }
+
+  disableAllOptions() {
+    const opts = this.container.querySelectorAll('.option-btn');
+    opts.forEach(o => (o.disabled = true));
+  }
+
+  shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  generateOptions(correct) {
+    // Fallback: mix correct with answers from other items
+    const pool = this.data.map(d => d.answer).filter(a => a && a !== correct);
+    const distractors = this.shuffle(pool).slice(0, 3);
+    return this.shuffle([correct, ...distractors]);
   }
 
   checkAnswer(guess, answer) {
