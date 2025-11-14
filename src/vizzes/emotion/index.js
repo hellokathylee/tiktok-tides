@@ -27,8 +27,17 @@ export class EmotionViz extends EventEmitter {
     this.mounted = false;
     this.svg = null;
 
+    // separate layer for hover connection lines
+    this.linkLayer = null;
+
     // NLP bits
     this.sentiment = null;
+
+    // In-browser embedding model (transformers.js pipeline)
+    this.embedder = null;
+
+    // Active emotion filters (multi-select)
+    this.activeEmotions = null;
 
     // --- Manual fallback lexicon so we always get non-neutral scores ----
     this.manualLexicon = {
@@ -99,9 +108,6 @@ export class EmotionViz extends EventEmitter {
 
   // --- NLP / sentiment -------------------------------------------------------
   async initNLP() {
-    // If using modules:
-    //   import Sentiment from 'sentiment';
-    //   this.sentiment = new Sentiment();
     if (this.sentiment) return;
 
     if (window.Sentiment) {
@@ -122,19 +128,105 @@ export class EmotionViz extends EventEmitter {
     return 0;
   }
 
-  // Less strict mapping: add a small jitter so scores spread into more buckets
+  /**
+   * Map a (normalized) sentiment score into a discrete emotion bucket.
+   * Score is expected to be roughly in [-3, 3], but compressed via sqrt.
+   */
   mapSentimentToEmotion(score) {
-    // jitter in [-0.6, 0.6]
-    const jitter = (Math.random() - 0.5) * 1.2;
-    const s = score + jitter;
+    const s = score;
 
-    if (s <= -1.2) return "anger"; // strong negative
-    if (s <= -0.4) return "sadness"; // moderate negative
-    if (s < 0) return "disappointment"; // mild negative
-    if (s < 0.6) return "neutral"; // near zero
-    if (s < 1.4) return "hope"; // mild positive
-    if (s < 2.4) return "joy"; // solid positive
-    return "excitement"; // very positive
+    if (s <= -1.8) return "anger";
+    if (s <= -1.0) return "sadness";
+    if (s < -0.25) return "disappointment";
+
+    if (s <= 0.25) return "neutral";
+
+    if (s < 0.9) return "hope";
+    if (s < 1.6) return "joy";
+    return "excitement";
+  }
+
+  // --- Embedding helpers (transformers.js) ----------------------------------
+
+  // Lazily load the embedding pipeline in the browser
+  async initEmbedder() {
+    if (this.embedder) return;
+
+    // Dynamic import so Vite can code-split the model
+    const { pipeline, env } = await import("@xenova/transformers");
+
+    // Use remote models (Hugging Face Hub) by default
+    env.allowLocalModels = false;
+
+    // Small sentence-embedding model
+    this.embedder = await pipeline(
+      "feature-extraction",
+      "Xenova/all-MiniLM-L6-v2"
+    );
+  }
+
+  // Compute embeddings for an array of words
+  async computeEmbeddings(words) {
+    await this.initEmbedder();
+
+    const tensor = await this.embedder(words, {
+      pooling: "mean",
+      normalize: true,
+    });
+
+    const embeddings = tensor.tolist ? tensor.tolist() : tensor.data;
+    return embeddings;
+  }
+
+  // Cosine similarity between two embedding vectors
+  cosineSimilarity(a, b) {
+    if (!a || !b || a.length !== b.length) return 0;
+
+    let dot = 0;
+    let na = 0;
+    let nb = 0;
+
+    for (let i = 0; i < a.length; i++) {
+      const va = a[i];
+      const vb = b[i];
+      dot += va * vb;
+      na += va * va;
+      nb += vb * vb;
+    }
+
+    const denom = Math.sqrt(na) * Math.sqrt(nb);
+    return denom ? dot / denom : 0;
+  }
+
+  /**
+   * Project high-dimensional embeddings into 2D using a simple random
+   * linear projection. This preserves neighborhood structure reasonably well
+   * and gives us a stable "embedding space" layout to anchor the words to.
+   */
+  projectEmbeddingsTo2D(tokens) {
+    if (!tokens.length || !tokens[0].embedding) return;
+
+    const dim = tokens[0].embedding.length;
+
+    // Two random projection directions
+    const r1 = new Array(dim);
+    const r2 = new Array(dim);
+    for (let i = 0; i < dim; i++) {
+      r1[i] = Math.random() - 0.5;
+      r2[i] = Math.random() - 0.5;
+    }
+
+    tokens.forEach((t) => {
+      const e = t.embedding;
+      let x = 0;
+      let y = 0;
+      for (let i = 0; i < dim; i++) {
+        x += e[i] * r1[i];
+        y += e[i] * r2[i];
+      }
+      t.projX = x;
+      t.projY = y;
+    });
   }
 
   // --- Data loading + processing --------------------------------------------
@@ -143,7 +235,6 @@ export class EmotionViz extends EventEmitter {
       await this.initNLP();
 
       const [data] = await Promise.all([
-        // UPDATED PATH
         d3.csv("/data/cleaned_tiktok_data.csv", d3.autoType),
       ]);
 
@@ -192,6 +283,66 @@ export class EmotionViz extends EventEmitter {
         "https",
         "www",
         "com",
+      ]);
+
+      // explicit filler / reaction words we treat as non-key and never show
+      const fillerWords = new Set([
+        "omg",
+        "lol",
+        "lmao",
+        "lmfao",
+        "wtf",
+        "idk",
+        "tbh",
+        "btw",
+        "ikr",
+        "rn",
+        "tho",
+        "bruh",
+        "bro",
+        "sis",
+        "omfg",
+        "pls",
+        "plz",
+        "yall",
+        "ya",
+        "yea",
+        "yeah",
+        "ok",
+        "okay",
+        "kinda",
+        "sorta",
+        "really",
+        "literally",
+        "actually",
+        "gonna",
+        "wanna",
+        "gotta",
+        "haha",
+        "hahaha",
+        "ahah",
+        "hehe",
+        "heh",
+        "ugh",
+        "smh",
+        "fr",
+        "lowkey",
+        "highkey",
+        "how",
+        "many",
+        "our",
+        "back",
+        "try",
+        "keep",
+        "now",
+        "these",
+        "who",
+        "one",
+        "what",
+        "think",
+        "part",
+        "never",
+        "can",
       ]);
 
       // Keep only simple English tokens: a–z after lowercasing
@@ -311,8 +462,8 @@ export class EmotionViz extends EventEmitter {
 
       const wordMap = new Map();
 
-      // Build word frequencies + which captions they appear in (for similarity)
-      rows.forEach((row, rowIndex) => {
+      // Build word frequencies
+      rows.forEach((row) => {
         const text = String(row.text).toLowerCase();
         const rawTokens = text.match(/\b[\p{L}\p{N}'’]+\b/gu) || [];
 
@@ -324,32 +475,28 @@ export class EmotionViz extends EventEmitter {
         if (!normalizedTokens.length) return;
 
         // Caption-level English heuristic:
-        // if too few tokens are common English words, treat caption as non-English
         const englishCount = normalizedTokens.filter((t) =>
           englishCommonWords.has(t)
         ).length;
         const englishRatio = englishCount / normalizedTokens.length;
 
-        // Threshold can be tuned; 0.3 works well to drop Spanish/French, etc.
         if (englishRatio < 0.3) {
           return; // skip this caption entirely
         }
 
         normalizedTokens.forEach((token) => {
-          if (stopwords.has(token)) return;
-          if (token.length <= 2) return; // drop super-short words
+          if (stopwords.has(token) || fillerWords.has(token)) return;
+          if (token.length <= 2) return;
 
           let entry = wordMap.get(token);
           if (!entry) {
             entry = {
               word: token,
               count: 0,
-              docs: new Set(), // which caption indices it appears in
             };
             wordMap.set(token, entry);
           }
           entry.count += 1;
-          entry.docs.add(rowIndex);
         });
       });
 
@@ -372,17 +519,31 @@ export class EmotionViz extends EventEmitter {
 
       // Assign sentiment + emotion bucket
       tokens.forEach((t) => {
-        let score = 0;
+        let rawScore = 0;
 
-        // Try external sentiment library if present
         if (this.sentiment) {
           const res = this.sentiment.analyze(t.word);
-          score = res.score || 0;
+          rawScore = res.score || 0;
         }
 
-        // Fallback / override with manual lexicon if still neutral
-        if (!this.sentiment || score === 0) {
-          score = this.lexiconScore(t.word);
+        if (rawScore === 0) {
+          const lexScore = this.lexiconScore(t.word);
+          if (lexScore !== 0) {
+            rawScore = lexScore;
+          }
+        }
+
+        if (rawScore === 0) {
+          let r = (Math.random() - 0.5) * 2; // [-1, 1]
+          if (Math.abs(r) < 0.3) {
+            r = r < 0 ? -0.3 : 0.3;
+          }
+          rawScore = r;
+        }
+
+        let score = rawScore;
+        if (Math.abs(rawScore) >= 1) {
+          score = Math.sign(rawScore) * Math.sqrt(Math.abs(rawScore));
         }
 
         t.sentiment = score;
@@ -390,33 +551,61 @@ export class EmotionViz extends EventEmitter {
         emotionCategories.add(t.emotion);
       });
 
-      // Build a co-occurrence–based similarity graph to control distances
-      const links = [];
-      for (let i = 0; i < tokens.length; i++) {
-        for (let j = i + 1; j < tokens.length; j++) {
-          const a = tokens[i].docs;
-          const b = tokens[j].docs;
+      // === compute real semantic embeddings in the browser ==================
+      const words = tokens.map((t) => t.word);
+      const embeddings = await this.computeEmbeddings(words);
 
-          let intersectionSize = 0;
-          for (const id of a) {
-            if (b.has(id)) intersectionSize++;
-          }
-          if (!intersectionSize) continue;
-
-          const unionSize = a.size + b.size - intersectionSize;
-          const similarity = unionSize ? intersectionSize / unionSize : 0;
-          if (similarity > 0) {
-            links.push({
-              source: i,
-              target: j,
-              similarity,
-            });
-          }
-        }
+      if (!embeddings || embeddings.length !== tokens.length) {
+        console.warn(
+          "Embeddings missing or wrong size; falling back to no semantic links"
+        );
+        this.data = {
+          tokens,
+          links: [],
+          emotionCategories: Array.from(emotionCategories),
+          emotionColors,
+        };
+        this.activeEmotions = new Set(this.data.emotionCategories);
+        return;
       }
 
-      // Clean up heavy doc sets before storing
-      tokens.forEach((t) => delete t.docs);
+      tokens.forEach((t, i) => {
+        t.embedding = embeddings[i];
+      });
+
+      // Project embeddings into 2D for layout anchoring
+      this.projectEmbeddingsTo2D(tokens);
+
+      // Build similarity graph from cosine similarity between embeddings
+      const links = [];
+      const SIM_THRESHOLD = 0.25;
+      const MAX_NEIGHBORS = 8;
+
+      for (let i = 0; i < tokens.length; i++) {
+        const sims = [];
+
+        for (let j = 0; j < tokens.length; j++) {
+          if (i === j) continue;
+          const sim = this.cosineSimilarity(
+            tokens[i].embedding,
+            tokens[j].embedding
+          );
+          sims.push({ j, sim });
+        }
+
+        sims
+          .sort((a, b) => b.sim - a.sim)
+          .slice(0, MAX_NEIGHBORS)
+          .forEach(({ j, sim }) => {
+            if (sim >= SIM_THRESHOLD) {
+              links.push({
+                source: i,
+                target: j,
+                similarity: sim,
+              });
+            }
+          });
+      }
 
       this.data = {
         tokens,
@@ -424,6 +613,7 @@ export class EmotionViz extends EventEmitter {
         emotionCategories: Array.from(emotionCategories),
         emotionColors,
       };
+      this.activeEmotions = new Set(this.data.emotionCategories);
     } catch (err) {
       console.error("Error loading TikTok data for EmotionViz:", err);
     }
@@ -473,6 +663,7 @@ export class EmotionViz extends EventEmitter {
     this.options.height = height;
     if (this.mounted) {
       this.render();
+      this.applyEmotionFilter();
     }
     this.emit(VIZ_EVENTS.RESIZE);
   }
@@ -503,6 +694,7 @@ export class EmotionViz extends EventEmitter {
     const bbox = this.container.getBoundingClientRect();
     const width = this.options.width || bbox.width || 800;
     const height = this.options.height || bbox.height || 600;
+    const margin = 40;
 
     // Create SVG
     this.svg = d3
@@ -514,6 +706,9 @@ export class EmotionViz extends EventEmitter {
         "aria-label",
         "Word cloud showing sentiment-colored speech bubbles for TikTok caption words"
       );
+
+    // Layer for hover lines (drawn behind words)
+    this.linkLayer = this.svg.append("g").attr("class", "semantic-links");
 
     // Size scale: frequency → font size / bubble size
     const sizeScale = d3
@@ -532,28 +727,70 @@ export class EmotionViz extends EventEmitter {
       t.boxHeight = fontSize + paddingY * 2;
     });
 
-    // Force simulation:
+    // --- Map the 2D embedding projection into the SVG viewport -------------
+    const projXExtent = d3.extent(tokens, (d) => d.projX);
+    const projYExtent = d3.extent(tokens, (d) => d.projY);
+
+    const xScale = d3
+      .scaleLinear()
+      .domain(projXExtent)
+      .range([margin, width - margin]);
+
+    const yScale = d3
+      .scaleLinear()
+      .domain(projYExtent)
+      .range([margin, height - margin]);
+
+    // Set initial & anchor positions from embedding 2D projection
+    tokens.forEach((t) => {
+      const x = xScale(t.projX);
+      const y = yScale(t.projY);
+      t.x = x;
+      t.y = y;
+      t.anchorX = x;
+      t.anchorY = y;
+    });
+
+    // --- Light force layout: stay near embedding positions + avoid overlap -
     const simulation = d3
       .forceSimulation(tokens)
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("charge", d3.forceManyBody().strength(-20))
+      .alphaDecay(0.12)
+      .velocityDecay(0.4)
+      .force(
+        "x",
+        d3
+          .forceX((d) => d.anchorX)
+          .strength(0.2)
+      )
+      .force(
+        "y",
+        d3
+          .forceY((d) => d.anchorY)
+          .strength(0.2)
+      )
+      // small semantic link force to keep local neighborhoods tight
       .force(
         "link",
         d3
           .forceLink(links)
           .id((d, i) => i)
-          .distance((d) => 220 * (1 - d.similarity) + 30) // closer if more similar
-          .strength((d) => 0.5 * d.similarity)
+          .distance((d) => {
+            const sim = d.similarity || 0;
+            // nearby in embedding = short distance
+            return 30 + (1 - sim) * 120;
+          })
+          .strength((d) => 0.12 * (d.similarity || 0))
       )
       .force(
         "collision",
-        d3.forceCollide((d) => Math.max(d.boxWidth, d.boxHeight) / 2 + 8)
+        d3.forceCollide(
+          (d) => Math.max(d.boxWidth, d.boxHeight) / 2 + 6
+        )
       )
       .stop();
 
-    for (let i = 0; i < 250; i++) simulation.tick();
+    for (let i = 0; i < 150; i++) simulation.tick();
 
-    // where you create `bubbles`
     const bubbles = this.svg
       .selectAll(".word-bubble")
       .data(tokens)
@@ -564,19 +801,18 @@ export class EmotionViz extends EventEmitter {
     // Rounded rect for speech bubble body
     bubbles
       .append("rect")
-      .attr("class", "bubble-body") // 👈 add class
+      .attr("class", "bubble-body")
       .attr("x", (d) => -d.boxWidth / 2)
       .attr("y", (d) => -d.boxHeight / 2)
       .attr("width", (d) => d.boxWidth)
       .attr("height", (d) => d.boxHeight)
-      .attr("rx", 16) // a bit rounder
+      .attr("rx", 16)
       .attr("ry", 16)
       .attr("fill", (d) => emotionColors[d.emotion] || "#e5e7eb")
-      .attr("stroke", "transparent") // let CSS handle visible stroke
+      .attr("stroke", "transparent")
       .attr("opacity", 0.95);
 
     // Small triangle tail for the speech bubble
-    // Placed at the BOTTOM, slightly to the right (not centered)
     bubbles
       .append("path")
       .attr("class", "bubble-tail")
@@ -584,14 +820,12 @@ export class EmotionViz extends EventEmitter {
         const tailWidth = 12;
         const tailHeight = 9;
 
-        // Bottom edge of the rect in local coords
         const y = d.boxHeight / 2 - 1;
 
-        // Shifted toward the right, not centered
-        const baseLeft = d.boxWidth / 2 - tailWidth - 12; // tweak "- 4" to move it
+        const baseLeft = d.boxWidth / 2 - tailWidth - 12;
         const baseRight = baseLeft + tailWidth;
         const tipX = (baseLeft + baseRight) / 2;
-        const tipY = y + tailHeight; // tip points downward
+        const tipY = y + tailHeight;
 
         return `M ${baseLeft} ${y}
                 L ${baseRight} ${y}
@@ -612,7 +846,7 @@ export class EmotionViz extends EventEmitter {
       .style("fill", "var(--color-text-primary, #020617)")
       .style("pointer-events", "none");
 
-    // Interactions (hover / click)
+    // Interactions (hover only)
     this.addBubbleInteractions(bubbles);
 
     // Simple fade-in animation
@@ -624,6 +858,113 @@ export class EmotionViz extends EventEmitter {
         .delay((d, i) => i * 20)
         .attr("opacity", 1);
     }
+
+    // Apply current emotion visibility filter
+    this.applyEmotionFilter();
+  }
+
+  /**
+   * Draw dotted lines from hovered word to a few of its most similar neighbors
+   */
+  updateHoverLinks(centerNode) {
+    if (!this.linkLayer || !this.data) return;
+
+    const { links } = this.data;
+    if (!links || !links.length) {
+      this.clearHoverLinks();
+      return;
+    }
+
+    // d3-force gives each node an .index property
+    const centerIndex = centerNode.index;
+    const active =
+      this.activeEmotions || new Set(this.data.emotionCategories || []);
+
+    // Find links where the hovered node is one endpoint
+    const neighbors = links.filter(
+      (l) =>
+        (l.source.index ?? l.source) === centerIndex ||
+        (l.target.index ?? l.target) === centerIndex
+    );
+
+    if (!neighbors.length) {
+      this.clearHoverLinks();
+      return;
+    }
+
+    // Sort by similarity, strongest first
+    neighbors.sort((a, b) => b.similarity - a.similarity);
+    const MAX_LINES = 6;
+    const top = neighbors.slice(0, MAX_LINES);
+
+    const lineData = top
+      .map((l) => {
+        const sourceIndex = l.source.index ?? l.source;
+        const targetIndex = l.target.index ?? l.target;
+
+        const other =
+          sourceIndex === centerIndex ? l.target : l.source;
+
+        if (!other || !active.has(other.emotion)) return null;
+
+        return {
+          x1: centerNode.x,
+          y1: centerNode.y,
+          x2: other.x,
+          y2: other.y,
+          similarity: l.similarity,
+        };
+      })
+      .filter(Boolean);
+
+    // Clear existing lines
+    this.linkLayer.selectAll("line.semantic-link").remove();
+
+    if (!lineData.length) return;
+
+    const lines = this.linkLayer
+      .selectAll("line.semantic-link")
+      .data(lineData)
+      .enter()
+      .append("line")
+      .attr("class", "semantic-link")
+      .attr("x1", (d) => d.x1)
+      .attr("y1", (d) => d.y1)
+      // start collapsed at the center, then animate out
+      .attr("x2", (d) => d.x1)
+      .attr("y2", (d) => d.y1)
+      .attr("stroke-opacity", 0)
+      .attr("pointer-events", "none");
+
+    if (this.options.reducedMotion) {
+      // No animation, just snap into place
+      lines
+        .attr("x2", (d) => d.x2)
+        .attr("y2", (d) => d.y2)
+        .attr("stroke-opacity", 0.9);
+    } else {
+      // Animate outwards from the hovered word
+      lines
+        .transition()
+        .duration(200)
+        .attr("x2", (d) => d.x2)
+        .attr("y2", (d) => d.y2)
+        .attr("stroke-opacity", 0.9);
+    }
+  }
+
+  clearHoverLinks() {
+    if (!this.linkLayer) return;
+    const selection = this.linkLayer.selectAll("line.semantic-link");
+    if (this.options.reducedMotion) {
+      selection.remove();
+    } else {
+      selection
+        .transition()
+        .duration(150)
+        .attr("stroke-opacity", 0)
+        .remove();
+    }
   }
 
   // --- Legend + interactions ------------------------------------------------
@@ -632,47 +973,106 @@ export class EmotionViz extends EventEmitter {
     if (!legendPanel || !this.data) return;
 
     legendPanel.innerHTML = "";
+    const viz = this;
 
     this.data.emotionCategories.forEach((emotion) => {
       const item = document.createElement("li");
+      item.className = "emotion-legend-item";
+
+      const color = this.data.emotionColors[emotion];
+
       item.innerHTML = `
-        <span style="
-          display:inline-block;
-          width:12px;
-          height:12px;
-          background:${this.data.emotionColors[emotion]};
-          border-radius:50%;
-          margin-right:8px;
-        "></span>
-        ${emotion}
-      `;
-      item.style.display = "flex";
-      item.style.alignItems = "center";
+      <label class="emotion-legend-label-wrapper">
+        <input
+          type="checkbox"
+          class="emotion-legend-checkbox"
+          data-emotion="${emotion}"
+          checked
+        />
+        <span class="emotion-legend-chip" style="--emotion-color:${color}">
+          <span class="emotion-legend-checkmark"></span>
+          <span class="emotion-legend-color-dot"></span>
+          <span class="emotion-legend-text">${emotion}</span>
+        </span>
+      </label>
+    `;
+
       legendPanel.appendChild(item);
+
+      const checkbox = item.querySelector(".emotion-legend-checkbox");
+      if (checkbox) {
+        checkbox.addEventListener("change", (e) => {
+          const key = e.target.dataset.emotion;
+          if (!viz.activeEmotions) {
+            viz.activeEmotions = new Set(viz.data.emotionCategories);
+          }
+
+          if (e.target.checked) {
+            viz.activeEmotions.add(key);
+          } else {
+            viz.activeEmotions.delete(key);
+          }
+
+          viz.applyEmotionFilter();
+        });
+      }
     });
+  }
+
+  applyEmotionFilter() {
+    if (!this.svg || !this.data || !this.activeEmotions) return;
+
+    const active = this.activeEmotions;
+
+    this.svg
+      .selectAll(".word-bubble")
+      .attr("display", (d) => (active.has(d.emotion) ? null : "none"));
+
+    // also clear links so we don't show connections to hidden bubbles
+    this.clearHoverLinks();
   }
 
   addBubbleInteractions(bubbles) {
     bubbles
       .on("mouseenter", (event, d) => {
-        d3.select(event.currentTarget)
-          .select("rect")
-          .transition()
-          .duration(200)
-          .attr("stroke-width", 3);
+        const g = d3.select(event.currentTarget);
 
+        // enlarge slightly
+        if (!this.options.reducedMotion) {
+          g.raise()
+            .transition()
+            .duration(160)
+            .attr("transform", `translate(${d.x}, ${d.y}) scale(1.08)`);
+        } else {
+          g.raise().attr(
+            "transform",
+            `translate(${d.x}, ${d.y}) scale(1.08)`
+          );
+        }
+
+        // show side detail, if present
         this.showBubbleDetail(d);
+
+        // show semantic dotted lines
+        this.updateHoverLinks(d);
       })
-      .on("mouseleave", (event) => {
-        d3.select(event.currentTarget)
-          .select("rect")
-          .transition()
-          .duration(200)
-          .attr("stroke-width", 1.5);
-      })
-      .on("click", (event, d) => {
-        this.openDetailDrawer(d);
+      .on("mouseleave", (event, d) => {
+        const g = d3.select(event.currentTarget);
+
+        // return to original size
+        if (!this.options.reducedMotion) {
+          g.transition()
+            .duration(160)
+            .attr("transform", `translate(${d.x}, ${d.y}) scale(1)`);
+        } else {
+          g.attr("transform", `translate(${d.x}, ${d.y}) scale(1)`);
+        }
+
+        // remove hover connections
+        this.clearHoverLinks();
       });
+
+    // no click handler: clicking does nothing now
   }
 
   showBubbleDetail(data) {
@@ -689,6 +1089,7 @@ export class EmotionViz extends EventEmitter {
     }
   }
 
+  // Drawer is no longer used for clicks, but kept in case other steps call it
   openDetailDrawer(data) {
     const drawer = document.querySelector(".detail-drawer");
     if (drawer) {
@@ -710,7 +1111,6 @@ export class EmotionViz extends EventEmitter {
   }
 
   highlightHighEngagement() {
-    // Reinterpreted as "highlight high-frequency words"
     if (!this.svg || !this.data) return;
 
     const maxCount = d3.max(this.data.tokens, (d) => d.count) || 1;
