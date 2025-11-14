@@ -145,7 +145,7 @@ export class ConveyorViz extends EventEmitter {
       <h3>Guess the Ingredient!</h3>
       <div class="conveyor-score">
         <span class="score-label">Score:</span>
-        <span class="score-value">${this.state.score}/${this.state.totalAttempts}</span>
+        <span class="score-value">${this.state.score}/${this.data ? this.data.length : 0}</span>
       </div>
     `;
     this.container.appendChild(header);
@@ -384,9 +384,8 @@ export class ConveyorViz extends EventEmitter {
   submitGuess(guess, btnEl) {
     if (!guess) return;
 
-    this.state.hasGuessed = true;
-    this.state.currentGuess = guess;
-    this.state.totalAttempts++;
+  this.state.hasGuessed = true;
+  this.state.currentGuess = guess;
 
     // Disable clicked option to prevent repeat
     if (btnEl) btnEl.disabled = true;
@@ -539,7 +538,7 @@ export class ConveyorViz extends EventEmitter {
     panel.innerHTML = `
       <div class="completion-message">
         <h3>🎊 Complete!</h3>
-        <p class="final-score">Your Score: ${this.state.score}/${this.state.totalAttempts}</p>
+        <p class="final-score">Your Score: ${this.state.score}/${this.data ? this.data.length : 0}</p>
         <p class="score-message">${this.getScoreMessage()}</p>
       </div>
     `;
@@ -552,7 +551,8 @@ export class ConveyorViz extends EventEmitter {
   }
 
   getScoreMessage() {
-    const percentage = (this.state.score / this.state.totalAttempts) * 100;
+    const total = this.data ? this.data.length : 1;
+    const percentage = (this.state.score / total) * 100;
     
     if (percentage === 100) return '🌟 Perfect! You know your TikTok ingredients!';
     if (percentage >= 80) return '🔥 Excellent! You\'re ready to go viral!';
@@ -564,7 +564,7 @@ export class ConveyorViz extends EventEmitter {
   updateScore() {
     const scoreValue = this.container.querySelector('.score-value');
     if (scoreValue) {
-      scoreValue.textContent = `${this.state.score}/${this.state.totalAttempts}`;
+      scoreValue.textContent = `${this.state.score}/${this.data ? this.data.length : 0}`;
     }
   }
 
