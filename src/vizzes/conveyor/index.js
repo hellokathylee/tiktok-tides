@@ -41,45 +41,45 @@ export class ConveyorViz extends EventEmitter {
     this.data = [
       {
         id: 'duration',
-        label: 'Video Duration',
-        answer: '15-30 seconds',
-        hint: 'Sweet spot for engagement',
-        options: ['5 minutes', '1-2 seconds', '15-30 seconds', '2-3 minutes']
+        label: 'Ideal Video Duration ⏱️',
+        answer: '20-30 seconds',
+        hint: 'Keep it punchy to maximize completion and replays.',
+        options: ['10-15 seconds', '45-60 seconds', '20-30 seconds', '2-3 minutes']
       },
       {
-        id: 'audio',
-        label: 'Trending Audio',
-        answer: 'Viral sounds',
-        hint: 'What your ears catch first',
-        options: ['Silence', 'White noise', 'Original voice only', 'Viral sounds']
+        id: 'popular_sound',
+        label: 'Most Popular Sound to Use 🎵',
+        answer: 'Anxiety by Doechii',
+        hint: 'This track topped the TikTok charts recently.',
+        options: ['Streets by Doja Cat', 'Cold Water by Justin Bieber', 'Anxiety by Doechii', 'Cruel Summer by Taylor Swift']
       },
       {
-        id: 'hashtags',
-        label: 'Hashtag Strategy',
-        answer: '3-5 tags',
-        hint: 'Not too many, not too few',
-        options: ['3-5 tags', 'No tags', '1 tag', '20+ tags']
+        id: 'danceability_avg',
+        label: 'Average Danceability for Sounds 💃',
+        answer: '0.8',
+        hint: 'On a 0–1 scale, higher means more groove.',
+        options: ['0.4', '0.6', '0.8', '0.2']
       },
       {
-        id: 'timing',
-        label: 'Post Timing',
-        answer: '6-10 AM or 7-11 PM',
-        hint: 'When your audience scrolls',
-        options: ['3-4 PM weekdays only', 'Anytime', '2-4 AM weekdays', '6-10 AM or 7-11 PM']
+        id: 'energy_avg',
+        label: 'Average Energy for Sounds ⚡',
+        answer: '0.7',
+        hint: '0–1 scale; think intensity and activity.',
+        options: ['0.3', '0.5', '0.7', '0.9']
       },
       {
-        id: 'emotion',
-        label: 'Emotional Hook',
-        answer: 'Joy or Surprise',
-        hint: 'What makes people share',
-        options: ['Confusion', 'Neutral tone', 'Anger', 'Joy or Surprise']
+        id: 'caption_word',
+        label: 'What Word to Include in the Caption ✍️',
+        answer: 'fyp',
+        hint: 'A classic tag to boost discoverability.',
+        options: ['pls', 'linkinbio', 'omg', 'fyp']
       },
       {
-        id: 'duet',
-        label: 'Collaboration',
-        answer: 'Duet/Stitch enabled',
-        hint: 'Let others remix your content',
-        options: ['Comments disabled', 'No sharing', 'Original audio only', 'Duet/Stitch enabled']
+        id: 'community',
+        label: 'Popular TikTok Community 🐾',
+        answer: 'pets',
+        hint: 'Content that never goes out of style.',
+        options: ['finance', 'origami', 'pets', 'meteorology']
       }
     ];
   }
