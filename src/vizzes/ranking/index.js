@@ -486,7 +486,7 @@ export class RankingViz extends EventEmitter {
         .style('opacity', 0)
         .style('background', 'white')
         .style('border-radius', '30px')
-        .style('padding', '16px')
+        // .style('padding', '16px')   -- makes sure gif svg fits exactly
         .style('z-index', 1000)
         .style('width', width + 'px')
         .style('height', height + 'px')
@@ -502,6 +502,7 @@ export class RankingViz extends EventEmitter {
         this.popup.node(),
         d.category,
         d.color,
+        gifMap[d.category] || '',
         { maxAuthors: 18 }
       );
 

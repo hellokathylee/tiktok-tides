@@ -8,7 +8,7 @@ export class RankingBubbleChart {
    * @param {string} categoryColor - fill color for circles (match sticky note color)
    * @param {Object} options - optional config overrides
    */
-  constructor(parentElement, category, categoryColor, options = {}) {
+  constructor(parentElement, category, categoryColor, gifUrl, options = {}) {
     this.parentElement =
       typeof parentElement === 'string'
         ? d3.select(parentElement)
@@ -22,6 +22,7 @@ export class RankingBubbleChart {
 
     this.category = category;
     this.categoryColor = categoryColor || 'var(--color-accent)';
+    this.gifUrl = gifUrl || null;
     this.options = {
       maxAuthors: 18, // show top N authors in this category
       margin: { top: 40, right: 24, bottom: 32, left: 24 },
@@ -55,6 +56,7 @@ export class RankingBubbleChart {
   initVis() {
     // Clear any previous SVG (for safety / resize)
     this.parentElement.selectAll('*').remove();
+    d3.selectAll('#rankingBubbleTooltip').remove();
 
     // Remove old tooltip if re-initializing
     if (this.tooltip) {
@@ -70,10 +72,22 @@ export class RankingBubbleChart {
       .attr('role', 'img')
       .attr(
         'aria-label',
-        `Top creators in ${this.category} community by total views`
+        `Top creators in ${this.category} community`
       );
-    
-     // 👇 Background + border for the whole drawing area
+    // --- defs: rounded corner clip for the whole drawing area
+    const rx = 20, ry = 20;
+    const defs = this.svg.append('defs');
+    defs.append('clipPath')
+      .attr('id', 'bubbleChartRoundedClip')
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', this.width)
+      .attr('height', this.height)
+      .attr('rx', rx)
+      .attr('ry', ry);
+
+     // Background + border for the whole drawing area
     this.svg
       .append('rect')
       .attr('class', 'bubble-bg')
@@ -84,8 +98,34 @@ export class RankingBubbleChart {
       .attr('fill', '#ffffff')
       .attr('stroke', '#ff0050') // TikTok pink border
       .attr('stroke-width', 0)
-      .attr('rx', 40)   // horizontal corner radius
-      .attr('ry', 40);
+      .attr('rx', rx)   // horizontal corner radius
+      .attr('ry', ry);
+    
+    // --- GIF layer (plays automatically if animated)
+    if (this.gifUrl) {
+      this.svg.append('image')
+        .attr('class', 'bubble-gif')
+        .attr('href', this.gifUrl)
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', this.width)
+        .attr('height', this.height)
+        .attr('opacity', 0.75)
+        .attr('preserveAspectRatio', 'xMidYMid slice')
+        .attr('clip-path', 'url(#bubbleChartRoundedClip)');
+    }
+
+    // --- border overlay so the frame is crisp above the GIF
+    this.svg.append('rect')
+      .attr('class', 'bubble-frame')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', this.width)
+      .attr('height', this.height)
+      .attr('fill', 'none')
+      .attr('rx', rx)
+      .attr('ry', ry)
+      ;
 
     // Main chart group on top
     this.chartG = this.svg
@@ -124,7 +164,8 @@ export class RankingBubbleChart {
       .attr('text-anchor', 'middle')
       .style('fill', 'var(--color-text-secondary)')
       .style('font-size', '15px')
-      .text('Top Creators In This Community By Total Views');
+      .style('fill', '#515151ff')
+      .text('Top Creators In This Community');
 
 
     // Lab 6-style tooltip
@@ -167,15 +208,15 @@ export class RankingBubbleChart {
   /**
    * Update category + color from parent viz (on sticky-note click).
    */
-  setCategory(category, categoryColor) {
-    this.category = category;
-    if (categoryColor) this.categoryColor = categoryColor;
-    if (this.title) {
-      this.title.text(`Top Creators in ${this.category} Community by Total Views`);
-    }
-    this.wrangleData();
-    this.updateVis();
-  }
+  // setCategory(category, categoryColor) {
+  //   this.category = category;
+  //   if (categoryColor) this.categoryColor = categoryColor;
+  //   if (this.title) {
+  //     this.title.text(`Top Creators in ${this.category} Community by Total Views`);
+  //   }
+  //   this.wrangleData();
+  //   this.updateVis();
+  // }
 
   // ---------- WRANGLE DATA (Lab 3 style aggregation) ----------
 
@@ -269,10 +310,10 @@ export class RankingBubbleChart {
       .filter((d) => d.totalViews > 0);
 
     // Rank by total views and keep top 10
-    stats.sort((a, b) =>
-      d3.descending(a.totalViews, b.totalViews)
-    );
-    stats = stats.slice(0, 10);
+    // stats.sort((a, b) =>
+    //   d3.descending(a.totalViews, b.totalViews)
+    // );
+    stats = stats.slice(0,25);
 
     // Proportional circle sizes (area ~ views)
     const maxViews =
@@ -323,9 +364,9 @@ export class RankingBubbleChart {
     for (let i = 0; i < maxTicks; i++) {
     simulation.tick();
     simNodes.forEach((d) => {
-        // keep each circle fully inside [0, innerWidth] x [0, innerHeight]
+        // keep each circle fully inside [0, innerWidth] x [30, innerHeight]
         d.x = Math.max(d.r, Math.min(this.innerWidth - d.r, d.x));
-        d.y = Math.max(d.r, Math.min(this.innerHeight - d.r, d.y));
+        d.y = Math.max(d.r + 30, Math.min((this.innerHeight) - d.r, d.y));
     });
     }
     simulation.stop();
@@ -440,6 +481,7 @@ export class RankingBubbleChart {
 
         // Highlight circle with TikTok aqua
         node.select('.author-circle')
+          .attr('fill-opacity', 1)
           .attr('stroke', '#484848ff')
           .attr('stroke-width', 5);
 
@@ -456,6 +498,7 @@ export class RankingBubbleChart {
 
         // Remove highlight, restore original (no stroke)
         node.select('.author-circle')
+          .attr('fill-opacity', 0.9)
           .attr('stroke', null)
           .attr('stroke-width', null);
         this.tooltip
@@ -523,8 +566,7 @@ export class RankingBubbleChart {
   resize(width, height) {
     this.width = width;
     this.height = height;
-    this.initVis();
-    // reuse loaded data
+    this.initVis();   // rebuilds defs/clip, bg, gif, frame
     this.wrangleData();
     this.updateVis();
   }
