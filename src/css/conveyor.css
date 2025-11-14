@@ -61,8 +61,9 @@
   content: '';
   position: absolute;
   bottom: 80px;
-  left: 0;
-  right: 0;
+  /* Extend belt beyond wrapper so boxes are always over the track */
+  left: -50vw;
+  right: -50vw;
   height: 80px;
   background: 
     linear-gradient(180deg,
@@ -84,8 +85,9 @@
   content: '';
   position: absolute;
   bottom: 80px;
-  left: 0;
-  right: 0;
+  /* Match extended width of the belt surface */
+  left: -50vw;
+  right: -50vw;
   height: 80px;
   background: 
     repeating-linear-gradient(
@@ -112,10 +114,12 @@
 
 .conveyor-belt {
   display: flex;
-  gap: 20px;
+  gap: 32px; /* Slightly more spacing between boxes */
   padding: 2rem 0;
   height: 100%;
   align-items: center;
+  position: relative; /* Ensure boxes render above the track */
+  z-index: 1;
   transition: transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1);
   will-change: transform;
   transform-style: preserve-3d;
@@ -771,6 +775,10 @@
   .conveyor-box {
     width: 180px;
     height: 260px;
+  }
+
+  .conveyor-belt {
+    gap: 24px; /* Slightly tighter spacing on small screens */
   }
 
   .box-label {
