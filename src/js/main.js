@@ -637,6 +637,19 @@ class TikTokTidesApp {
         }
     }
 
+    setupPlayerIntro() {
+        const startBtn = document.querySelector('[data-player-start]');
+        if (!startBtn) return;
+        const playerWrapper = document.querySelector('.record-player-wrapper');
+
+        const startExploring = () => {
+            playerWrapper?.removeAttribute('data-player-locked');
+            startBtn.style.display = 'none';
+        };
+
+        startBtn.addEventListener('click', startExploring);
+    }
+
     showDetailPanel(data) {
         const panel = document.querySelector('.detail-panel');
         if (panel) {
@@ -789,4 +802,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize main app
     window.app = new TikTokTidesApp();
+    window.app.setupPlayerIntro();
 });
