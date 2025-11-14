@@ -44,42 +44,42 @@ export class ConveyorViz extends EventEmitter {
         label: 'Video Duration',
         answer: '15-30 seconds',
         hint: 'Sweet spot for engagement',
-        category: 'Content'
+        // category: 'Content'
       },
       {
         id: 'audio',
         label: 'Trending Audio',
         answer: 'Viral sounds',
         hint: 'What your ears catch first',
-        category: 'Audio'
+        // category: 'Audio'
       },
       {
         id: 'hashtags',
         label: 'Hashtag Strategy',
         answer: '3-5 tags',
         hint: 'Not too many, not too few',
-        category: 'Discovery'
+        // category: 'Discovery'
       },
       {
         id: 'timing',
         label: 'Post Timing',
         answer: '6-10 AM or 7-11 PM',
         hint: 'When your audience scrolls',
-        category: 'Strategy'
+        // category: 'Strategy'
       },
       {
         id: 'emotion',
         label: 'Emotional Hook',
         answer: 'Joy or Surprise',
         hint: 'What makes people share',
-        category: 'Content'
+        // category: 'Content'
       },
       {
         id: 'duet',
         label: 'Collaboration',
         answer: 'Duet/Stitch enabled',
         hint: 'Let others remix your content',
-        category: 'Features'
+        // category: 'Features'
       }
     ];
   }
@@ -200,7 +200,6 @@ export class ConveyorViz extends EventEmitter {
     const front = document.createElement('div');
     front.className = 'box-face box-front';
     front.innerHTML = `
-      <div class="box-category">${item.category}</div>
       <div class="box-label">${item.label}</div>
       <div class="box-hint">${item.hint}</div>
       <div class="box-number">#${index + 1}</div>
