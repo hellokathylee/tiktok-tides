@@ -364,7 +364,10 @@ export class ConveyorViz extends EventEmitter {
     // Reset reveal and next buttons
     const revealBtn = this.container.querySelector('.reveal-btn');
     const nextBtn = this.container.querySelector('.next-btn');
-    if (revealBtn) revealBtn.style.display = 'inline-block';
+    if (revealBtn) {
+      revealBtn.style.display = 'none';
+      revealBtn.disabled = true;
+    }
     if (nextBtn) nextBtn.style.display = 'none';
 
     // Highlight current box
@@ -411,6 +414,12 @@ export class ConveyorViz extends EventEmitter {
         this.showFeedback(`Out of attempts. You can reveal the answer.`, 'warning');
         // Disable remaining options
         this.disableAllOptions();
+        // Enable reveal button now that attempts are exhausted
+        const revealBtn = this.container.querySelector('.reveal-btn');
+        if (revealBtn) {
+          revealBtn.style.display = 'inline-block';
+          revealBtn.disabled = false;
+        }
       }
     }
 
@@ -464,6 +473,14 @@ export class ConveyorViz extends EventEmitter {
 
   revealAnswer() {
     if (this.state.revealed) return;
+
+    // Prevent reveal unless user is out of attempts or already correct
+    const current = this.data[this.state.currentIndex];
+    const lastGuessCorrect = this.checkAnswer(this.state.currentGuess || '', current.answer);
+    if (!lastGuessCorrect && (this.state.attemptsLeft ?? 0) > 0) {
+      this.showFeedback('Take up to 3 attempts before revealing.', 'warning');
+      return;
+    }
 
     this.state.revealed = true;
 
