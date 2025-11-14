@@ -239,9 +239,9 @@ export class CommunityViz extends EventEmitter {
     nodes.on('mouseenter', (event, d) => {
       this.highlightConnected(d);
     })
-    .on('mouseleave', () => {
-      this.resetHighlights();
-    });
+      .on('mouseleave', () => {
+        this.resetHighlights();
+      });
   }
 
   filterByCommunity(communityId) {
