@@ -330,27 +330,7 @@
   filter: blur(10px);
 }
 
-.box-category {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.25rem 0.5rem;
-  background: 
-    linear-gradient(135deg, 
-      rgba(0, 255, 224, 0.3) 0%, 
-      rgba(0, 200, 180, 0.25) 100%
-    );
-  color: var(--color-accent);
-  border-radius: 4px;
-  box-shadow: 
-    0 2px 8px rgba(0, 255, 224, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(0, 255, 224, 0.3);
-}
+/* Category tag removed; styles deleted */
 
 /* Enhanced Icon Styling for 3D effect */
 .box-icon,
