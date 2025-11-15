@@ -1,0 +1,169 @@
+/* Group: whole bubble */
+.word-bubble {
+  cursor: pointer;
+  transition: transform 150ms ease-out;
+}
+
+/* Rounded pill + shadow */
+.word-bubble .bubble-body {
+  stroke: rgba(15, 23, 42, 0.9); /* dark outline */
+  stroke-width: 1.5;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+/* Tail matches the body and shares the shadow */
+.word-bubble .bubble-tail {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+/* Text style inside bubble */
+.word-bubble text {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Hover outline enhancement (kept subtle, main effect is scale in JS) */
+.word-bubble:hover .bubble-body {
+  stroke-width: 2;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+}
+
+/* Dotted semantic links drawn on hover */
+.semantic-link {
+  stroke: rgba(15, 23, 42, 0.7);
+  stroke-width: 1.6;
+  stroke-dasharray: 4 4;
+  pointer-events: none;
+}
+
+/* Legend styling */
+.emotion-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.emotion-legend-item {
+  margin: 0;
+}
+
+/* Wraps the actual checkbox + visual chip */
+.emotion-legend-label-wrapper {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Hide the native checkbox but keep it accessible */
+.emotion-legend-checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The pill / chip that visually represents the filter */
+.emotion-legend-chip {
+  --checkbox-border: rgba(148, 163, 184, 0.9);
+  --checkbox-bg: rgba(15, 23, 42, 0.02);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--checkbox-border);
+  background: var(--checkbox-bg);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: #0f172a;
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    box-shadow 150ms ease-out,
+    transform 120ms ease-out;
+}
+
+/* Square "checkbox" inside the chip */
+.emotion-legend-checkmark {
+  width: 16px;
+  height: 16px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(148, 163, 184, 0.9);
+  background: #f9fafb;
+  box-sizing: border-box;
+  position: relative;
+  flex-shrink: 0;
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    box-shadow 150ms ease-out;
+}
+
+/* The small color dot that matches the emotion color */
+.emotion-legend-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--emotion-color, #6366f1);
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.3);
+  flex-shrink: 0;
+}
+
+/* Emotion label text */
+.emotion-legend-text {
+  text-transform: capitalize;
+  color: white;
+}
+
+/* Hover state for the chip */
+.emotion-legend-label-wrapper:hover .emotion-legend-chip {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(148, 163, 184, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);
+}
+
+/* Checked state – driven by the hidden checkbox */
+.emotion-legend-checkbox:checked + .emotion-legend-chip {
+  --checkbox-border: var(--emotion-color, #6366f1);
+  --checkbox-bg: rgba(15, 23, 42, 0.06);
+
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.1);
+}
+
+/* Fill the checkmark box with the emotion color when checked */
+.emotion-legend-checkbox:checked
+  + .emotion-legend-chip
+  .emotion-legend-checkmark {
+  background: var(--emotion-color, #6366f1);
+  border-color: var(--emotion-color, #6366f1);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.25);
+}
+
+/* Draw the tick */
+.emotion-legend-checkbox:checked
+  + .emotion-legend-chip
+  .emotion-legend-checkmark::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border-right: 2px solid #f9fafb;
+  border-bottom: 2px solid #f9fafb;
+  transform: rotate(45deg);
+}
+
+/* Focus-visible ring for keyboard navigation */
+.emotion-legend-checkbox:focus-visible + .emotion-legend-chip {
+  outline: 2px solid #0f766e;
+  outline-offset: 2px;
+}
