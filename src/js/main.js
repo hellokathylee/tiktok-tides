@@ -24,14 +24,6 @@ const SCENE_MAP = {
     '#section-fade': 'forest',
     '#section-takeaway': 'air',
     '#section-ingredients': 'lab'
-  '#section-landing': 'cosmos',
-  '#section-ignite': 'dawn',
-  '#section-surge': 'orbit',
-  '#section-spillover': 'city',
-  '#section-fade': 'forest',
-  '#section-takeaway': 'air',
-  '#section-ingredients': 'lab',
-  '#section-conveyor': 'lab'
 };
 
 // Scene names for keyboard shortcuts
@@ -141,7 +133,8 @@ class TikTokTidesApp {
             'section-spillover': { bg: 'bg-city', name: 'Spillover' },
             'section-fade': { bg: 'bg-forest', name: 'Fade/Revival' },
             'section-takeaway': { bg: 'bg-neutral', name: 'The Formula' },
-            'section-ingredients': { bg: 'bg-lab', name: 'Recipe Builder' }
+            'section-ingredients': { bg: 'bg-lab', name: 'Recipe Builder' },
+            'section-conveyor': { bg: 'bg-lab', name: 'Conveyor Belt' }
         };
 
         // bound handlers
@@ -149,24 +142,6 @@ class TikTokTidesApp {
 
         this.init();
     }
-  constructor() {
-    this.vizControllers = {};
-    this.currentSection = null;
-    this.motion = new MotionPatterns();
-    this.liveRegion = document.querySelector('[role="status"]');
-    this.audioMuted = true;
-
-    // Section metadata for transitions
-    this.sectionMeta = {
-      'section-landing': { bg: 'bg-cosmos', name: 'Landing' },
-      'section-ignite': { bg: 'bg-dawn', name: 'Ignite' },
-      'section-surge': { bg: 'bg-cosmos-deep', name: 'Surge' },
-      'section-spillover': { bg: 'bg-city', name: 'Spillover' },
-      'section-fade': { bg: 'bg-forest', name: 'Fade/Revival' },
-      'section-takeaway': { bg: 'bg-neutral', name: 'The Formula' },
-      'section-ingredients': { bg: 'bg-lab', name: 'Recipe Builder' },
-      'section-conveyor': { bg: 'bg-lab', name: 'Conveyor Belt' }
-    };
 
     async init() {
         // Initialize visualizations
@@ -237,6 +212,7 @@ class TikTokTidesApp {
         this.vizControllers.emotion = new EmotionViz();
         this.vizControllers.ingredients = new IngredientsViz();
         this.vizControllers.recordPlayer = new RecordPlayerViz();
+        this.vizControllers.conveyor = new ConveyorViz();
 
         // Initialize each viz with canonical API
         for (const [key, viz] of Object.entries(this.vizControllers)) {
@@ -299,36 +275,6 @@ class TikTokTidesApp {
             }
         }
     }
-    Object.keys(SCENE_MAP).forEach(sel => {
-      const el = document.querySelector(sel);
-      if (el) io.observe(el);
-    });
-  }
-
-  async initVisualizations() {
-    // Register visualization controllers
-    this.vizControllers.stopwatch = new StopwatchViz();
-    this.vizControllers.planets = new PlanetViz();
-    this.vizControllers.community = new CommunityViz();
-    this.vizControllers.ranking = new RankingViz();
-    this.vizControllers.emotion = new EmotionViz();
-    this.vizControllers.ingredients = new IngredientsViz();
-    this.vizControllers.conveyor = new ConveyorViz();
-
-    // Initialize each viz with canonical API
-    for (const [key, viz] of Object.entries(this.vizControllers)) {
-      try {
-        // SPECIAL-CASE: Stopwatch mounts into #chart (Section 1)
-        const selector =
-          key === 'stopwatch'
-            ? '#chart'
-            : `#viz-${key === 'planets' ? 'planets' : key}`;
-
-        await viz.init(selector, {
-          reducedMotion: this.prefersReducedMotion(),
-          animationSpeed: 1,
-          colorScheme: 'default'
-        });
 
     setupVizEvents(key, viz) {
         // Community: Audio preview on hover
@@ -548,7 +494,8 @@ class TikTokTidesApp {
                         href === 'section-fade' ? 'section-fade' :
                             href === 'section-takeaway' ? 'section-takeaway' :
                                 href === 'section-ingredients' ? 'section-ingredients' :
-                                    href;
+                                    href === 'section-conveyor' ? 'section-conveyor' :
+                                        href;
             link.setAttribute('aria-current', mappedSection === sectionId ? 'true' : 'false');
         });
     }
@@ -568,39 +515,6 @@ class TikTokTidesApp {
             });
         });
     }
-  }
-
-  updateNavigation(sectionId) {
-    // Update nav links aria-current
-    document.querySelectorAll('.nav-links a').forEach(link => {
-      const href = link.getAttribute('href').substring(1);
-      const mappedSection = href === 'section-ignite' ? 'section-ignite' :
-                          href === 'section-surge' ? 'section-surge' :
-                          href === 'section-spillover' ? 'section-spillover' :
-                          href === 'section-fade' ? 'section-fade' :
-                          href === 'section-takeaway' ? 'section-takeaway' :
-                          href === 'section-ingredients' ? 'section-ingredients' :
-                          href === 'section-conveyor' ? 'section-conveyor' :
-                          href;
-      link.setAttribute('aria-current', mappedSection === sectionId ? 'true' : 'false');
-    });
-  }
-
-  setupNavigation() {
-    // Smooth scroll for nav links
-    document.querySelectorAll('.nav-links a').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const target = document.querySelector(link.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({
-            behavior: this.prefersReducedMotion() ? 'auto' : 'smooth',
-            block: 'start'
-          });
-        }
-      });
-    });
-  }
 
     setupProgressBar() {
         const progressBar = document.querySelector('.progress-bar');
@@ -630,15 +544,16 @@ class TikTokTidesApp {
     setupKeyboardNav() {
         // Global keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            // Number keys 1-6 jump to sections
-            if (e.key >= '1' && e.key <= '6') {
+            // Number keys 1-7 jump to sections
+            if (e.key >= '1' && e.key <= '7') {
                 const sections = [
                     'section-ignite',
                     'section-surge',
                     'section-spillover',
                     'section-fade',
                     'section-takeaway',
-                    'section-ingredients'
+                    'section-ingredients',
+                    'section-conveyor'
                 ];
                 const sectionId = sections[parseInt(e.key) - 1];
                 const target = document.getElementById(sectionId);
@@ -665,24 +580,6 @@ class TikTokTidesApp {
         // Initial check
         if (mediaQuery.matches) {
             document.body.classList.add('reduced-motion');
-  setupKeyboardNav() {
-    // Global keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      // Number keys 1-7 jump to sections
-      if (e.key >= '1' && e.key <= '7') {
-        const sections = [
-          'section-ignite',
-          'section-surge',
-          'section-spillover',
-          'section-fade',
-          'section-takeaway',
-          'section-ingredients',
-          'section-conveyor'
-        ];
-        const sectionId = sections[parseInt(e.key) - 1];
-        const target = document.getElementById(sectionId);
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         // Listen for changes
@@ -879,7 +776,7 @@ class TikTokTidesApp {
 
     showKeyboardHelp() {
         console.log('Keyboard shortcuts:');
-        console.log('1-6: Jump to sections');
+        console.log('1-7: Jump to sections');
         console.log('Esc: Close overlays');
         console.log('?: Show this help');
         console.log('Tab: Navigate interactive elements');
@@ -890,20 +787,6 @@ class TikTokTidesApp {
         if (this.liveRegion) {
             this.liveRegion.textContent = message;
         }
-  }
-
-  showKeyboardHelp() {
-    console.log('Keyboard shortcuts:');
-    console.log('1-7: Jump to sections');
-    console.log('Esc: Close overlays');
-    console.log('?: Show this help');
-    console.log('Tab: Navigate interactive elements');
-    console.log('Enter: Activate buttons/links');
-  }
-
-  announce(message) {
-    if (this.liveRegion) {
-      this.liveRegion.textContent = message;
     }
 
     prefersReducedMotion() {
