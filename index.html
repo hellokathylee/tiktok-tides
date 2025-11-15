@@ -132,38 +132,51 @@
         </div>
       </section>
 
-      <!-- Section 3: Spillover (Community × Sounds) - Center network + right audio tray -->
+     <!-- Section 3: Record Player Section -->
       <section id="section-spillover" class="section scroll-section bg-city" role="region"
         aria-labelledby="spillover-title">
-        <div class="scene-layer scene--grid" aria-hidden="true"></div>
-        <div class="section-container layout-network-audio">
-          <div class="section-intro">
-            <h2 id="spillover-title">Spillover</h2>
-            <p class="lead">#BookTok. #FoodTok. #CleanTok. Communities emerge.</p>
-          </div>
-
-          <div class="network-container">
-            <div id="viz-community" class="viz-container" data-viz="community"></div>
-          </div>
-
-          <div class="audio-tray" role="complementary" aria-label="Audio previews">
-            <h3>Trending Sounds</h3>
-            <button class="audio-mute-toggle" aria-label="Toggle audio preview">
-              <span class="mute-icon">🔇</span>
-              <span class="unmute-icon" style="display:none">🔊</span>
-            </button>
-            <div class="audio-list">
-              <div class="audio-item" data-sound="sound1">
-                <span class="sound-name">Trending Audio 1</span>
-                <span class="sound-preview">2s preview on hover</span>
+        <section class="record-player-section" aria-label="Viral Vinyl: TikTok's most viral sounds">
+            <div class="record-player-header">
+              <h2 class="record-player-title">Viral Vinyl</h2>
+              <p class="record-player-description">Hear the sounds that shaped TikTok’s For You Page. Hover over the record’s rings to sample each trending sound — the farther out the ring, the louder the hype.</p>
+          <button type="button" class="record-player-start-btn" data-player-start>Start exploring</button>
+        </div>
+        <div class="record-player-layout" data-player-layout>
+          <div class="record-player-wrapper" data-player-locked>
+            <div class="record-player-base">
+              <div class="record-disc-area">
+                <div class="record-indicator-line record-indicator-line--max" aria-hidden="true">higher popularity</div>
+                <svg class="record-disc" viewBox="0 0 700 700" role="img" aria-labelledby="record-disc-title record-disc-desc">
+                  <title id="record-disc-title">Record player visualization of top TikTok songs</title>
+                  <desc id="record-disc-desc">Concentric rings represent songs ordered by popularity from outermost most popular to innermost least popular.</desc>
+                  <g class="record-rings" data-record-rings></g>
+                </svg>
+                <div class="record-center-cap" aria-hidden="true">
+                  <span class="record-center-year">2019–2025</span>
+                </div>
               </div>
-              <div class="audio-item" data-sound="sound2">
-                <span class="sound-name">Viral Beat</span>
-                <span class="sound-preview">2s preview on hover</span>
+              <div class="tonearm" data-tonearm>
+                <div class="tonearm-hinge">
+                  <div class="tonearm-arm" data-tonearm-arm>
+                     <div class="tonearm-back">
+                      <div class="tonearm-head"></div>
+                     </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+            <div class="record-player-notes" aria-hidden="true">
+              <span class="note note--cyan">♪</span>
+              <span class="note note--magenta">♫</span>
+              <span class="note note--black">♬</span>
+              <span class="note note--black">♬</span>
+              <span class="note note--black">♬</span>
+              <span class="note note--black">♬</span>
+              
+            </div>
+          </div> 
         </div>
+      </section>
       </section>
 
       <!-- Section 4: Fade/Revival (Ranking) - Full canopy + right KPI rail -->
@@ -182,21 +195,9 @@
               this week.
             </p>
           </div>
-
           <div id="viz-ranking" class="viz-container viz-fullbleed" data-viz="ranking"></div>
-
-          <!-- <div class="kpi-rail-vertical">
-            <div class="kpi-item">
-              <div class="kpi-value">[PLACEHOLDER_REVIVAL_PERCENTAGE]</div>
-              <div class="kpi-label">% see comebacks</div>
-            </div>
-            <div class="detail-panel" aria-hidden="true" role="region" aria-label="Topic details">
-              <h4>Topic Breakdown</h4>
-              <div class="detail-content"></div>
-            </div>
-          </div> -->
         </div>
-      </section>
+    </section>
 
       <!-- Section 5: Takeaway (Emotion) - Bubble cloud + left legend + right drawer -->
       <section id="section-takeaway" class="section scroll-section bg-neutral" role="region"
