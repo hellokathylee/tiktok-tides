@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +9,9 @@
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet">
 
     <!-- Styles -->
     <link rel="stylesheet" href="/src/css/tokens.css">
@@ -17,48 +20,54 @@
   </head>
 
   <body data-scene="cosmos">
-  <!-- Progress Bar -->
-  <div class="progress-bar" aria-hidden="true"></div>
+    <!-- Progress Bar -->
+    <div class="progress-bar" aria-hidden="true"></div>
 
-  <!-- Navigation -->
-  <nav class="nav-header" role="navigation" aria-label="Main navigation">
-    <div class="nav-container">
-      <h1 class="nav-title">TikTok Tides</h1>
-      <ul class="nav-links" role="list">
-        <li><a href="#section-ignite" aria-current="false">Ignite</a></li>
-        <li><a href="#section-surge" aria-current="false">Surge</a></li>
-        <li><a href="#section-spillover" aria-current="false">Spillover</a></li>
-        <li><a href="#section-fade" aria-current="false">Fade/Revival</a></li>
-        <li><a href="#section-takeaway" aria-current="false">Takeaway</a></li>
-        <li><a href="#section-ingredients" aria-current="false">Recipe</a></li>
-        <!-- <li><a href="#section-conveyor" aria-current="false">Conveyor</a></li> -->
-      </ul>
-    </div>
-  </nav>
-
-  <!-- Skip Link -->
-  <a href="#main-content" class="skip-link">Skip to main content</a>
-
-  <!-- Landing/Hero Section -->
-  <section id="section-landing" class="section hero-section bg-cosmos" role="region" aria-labelledby="hero-title">
-    <div class="scene-layer scene--stars" aria-hidden="true"></div>
-    <div class="starfield" aria-hidden="true"></div>
-    <div class="hero-content">
-      <h2 id="hero-title" class="hero-title gradient-text">TikTok Tides</h2>
-      <p class="hero-subtitle">Where trends are born, surge, and transform culture</p>
-      <div class="scroll-cue" aria-hidden="true">
-        <span>Dive into the data</span>
-        <svg width="24" height="24" viewBox="0 0 24 24">
-          <path d="M12 4 L12 20 M6 14 L12 20 L18 14" stroke="currentColor" stroke-width="2" fill="none"/>
-        </svg>
+    <!-- Navigation -->
+    <nav class="nav-header" role="navigation" aria-label="Main navigation">
+      <div class="nav-container">
+        <h1 class="nav-title">TikTok Tides</h1>
+        <ul class="nav-links" role="list">
+          <li><a href="#section-ignite" aria-current="false">Duration</a></li>
+          <li><a href="#section-surge" aria-current="false">Artists</a></li>
+          <li><a href="#section-spillover" aria-current="false">Sound</a></li>
+          <li><a href="#section-fade" aria-current="false">Community</a></li>
+          <li><a href="#section-takeaway" aria-current="false">Language</a></li>
+          <li><a href="#section-ingredients" aria-current="false">Virality!</a></li>
+          <!-- <li><a href="#section-conveyor" aria-current="false">Conveyor</a></li> -->
+        </ul>
       </div>
-    </div>
-  </section>
+    </nav>
+
+    <!-- Skip Link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Landing/Hero Section -->
+    <section id="section-landing" class="section hero-section bg-cosmos" role="region" aria-labelledby="hero-title">
+      <div class="scene-layer scene--stars" aria-hidden="true"></div>
+      <div class="starfield" aria-hidden="true"></div>
+      <div class="hero-content">
+        <h2 id="hero-title" class="hero-title gradient-text">TikTok Tides</h2>
+        <p class="hero-subtitle">Where trends are born, surge, and transform culture</p>
+        <div class="scroll-cue" aria-hidden="true">
+          <span>Dive into the data</span>
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <path d="M12 4 L12 20 M6 14 L12 20 L18 14" stroke="currentColor" stroke-width="2" fill="none" />
+          </svg>
+        </div>
+      </div>
+    </section>
 
     <main id="main-content">
       <!-- Section 1: Ignite (Stopwatch) - Centered full-width -->
       <section id="section-ignite" class="section scroll-section bg-dawn" role="region" aria-labelledby="ignite-title">
         <!-- Time-themed legend panel -->
+        <div class="section-intro">
+          <h2 id="ignite-title">Seconds to Success</h2>
+          <p class="lead"> Time is ticking… and so is engagement.
+            Hover around the stopwatch to see how long videos survive before users swipe away, and which durations break
+            through with big engagement.</p>
+        </div>
         <section class="legend-panel" aria-label="Visualization legend">
           <p class="legend-subtitle">How tiktok reel duration influence views</p>
 
@@ -132,51 +141,55 @@
         </div>
       </section>
 
-     <!-- Section 3: Record Player Section -->
+      <!-- Section 3: Record Player Section -->
       <section id="section-spillover" class="section scroll-section bg-city" role="region"
         aria-labelledby="spillover-title">
         <section class="record-player-section" aria-label="Viral Vinyl: TikTok's most viral sounds">
-            <div class="record-player-header">
-              <h2 class="record-player-title">Viral Vinyl</h2>
-              <p class="record-player-description">Hear the sounds that shaped TikTok’s For You Page. Hover over the record’s rings to sample each trending sound — the farther out the ring, the louder the hype.</p>
-          <button type="button" class="record-player-start-btn" data-player-start>Start exploring</button>
-        </div>
-        <div class="record-player-layout" data-player-layout>
-          <div class="record-player-wrapper" data-player-locked>
-            <div class="record-player-base">
-              <div class="record-disc-area">
-                <div class="record-indicator-line record-indicator-line--max" aria-hidden="true">higher popularity</div>
-                <svg class="record-disc" viewBox="0 0 700 700" role="img" aria-labelledby="record-disc-title record-disc-desc">
-                  <title id="record-disc-title">Record player visualization of top TikTok songs</title>
-                  <desc id="record-disc-desc">Concentric rings represent songs ordered by popularity from outermost most popular to innermost least popular.</desc>
-                  <g class="record-rings" data-record-rings></g>
-                </svg>
-                <div class="record-center-cap" aria-hidden="true">
-                  <span class="record-center-year">2019–2025</span>
+          <div class="record-player-header">
+            <h2 class="record-player-title">Viral Vinyl</h2>
+            <p class="record-player-description">Hear the sounds that shaped TikTok’s For You Page. Hover over the
+              record’s rings to sample each trending sound — the farther out the ring, the louder the hype.</p>
+            <button type="button" class="record-player-start-btn" data-player-start>Start exploring</button>
+          </div>
+          <div class="record-player-layout" data-player-layout>
+            <div class="record-player-wrapper" data-player-locked>
+              <div class="record-player-base">
+                <div class="record-disc-area">
+                  <div class="record-indicator-line record-indicator-line--max" aria-hidden="true">higher popularity
+                  </div>
+                  <svg class="record-disc" viewBox="0 0 700 700" role="img"
+                    aria-labelledby="record-disc-title record-disc-desc">
+                    <title id="record-disc-title">Record player visualization of top TikTok songs</title>
+                    <desc id="record-disc-desc">Concentric rings represent songs ordered by popularity from outermost
+                      most popular to innermost least popular.</desc>
+                    <g class="record-rings" data-record-rings></g>
+                  </svg>
+                  <div class="record-center-cap" aria-hidden="true">
+                    <span class="record-center-year">2019–2025</span>
+                  </div>
                 </div>
-              </div>
-              <div class="tonearm" data-tonearm>
-                <div class="tonearm-hinge">
-                  <div class="tonearm-arm" data-tonearm-arm>
-                     <div class="tonearm-back">
-                      <div class="tonearm-head"></div>
-                     </div>
+                <div class="tonearm" data-tonearm>
+                  <div class="tonearm-hinge">
+                    <div class="tonearm-arm" data-tonearm-arm>
+                      <div class="tonearm-back">
+                        <div class="tonearm-head"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+              <div class="record-player-notes" aria-hidden="true">
+                <span class="note note--cyan">♪</span>
+                <span class="note note--magenta">♫</span>
+                <span class="note note--black">♬</span>
+                <span class="note note--black">♬</span>
+                <span class="note note--black">♬</span>
+                <span class="note note--black">♬</span>
+
+              </div>
             </div>
-            <div class="record-player-notes" aria-hidden="true">
-              <span class="note note--cyan">♪</span>
-              <span class="note note--magenta">♫</span>
-              <span class="note note--black">♬</span>
-              <span class="note note--black">♬</span>
-              <span class="note note--black">♬</span>
-              <span class="note note--black">♬</span>
-              
-            </div>
-          </div> 
-        </div>
-      </section>
+          </div>
+        </section>
       </section>
 
       <!-- Section 4: Fade/Revival (Ranking) - Full canopy + right KPI rail -->
@@ -197,7 +210,7 @@
           </div>
           <div id="viz-ranking" class="viz-container viz-fullbleed" data-viz="ranking"></div>
         </div>
-    </section>
+      </section>
 
       <!-- Section 5: Takeaway (Emotion) - Bubble cloud + left legend + right drawer -->
       <section id="section-takeaway" class="section scroll-section bg-neutral" role="region"
@@ -205,8 +218,9 @@
         <div class="scene-layer scene--bubbles" aria-hidden="true"></div>
         <div class="section-container layout-bubble-legend-drawer">
           <div class="section-intro">
-            <h2 id="takeaway-title">The Formula</h2>
-            <p class="lead">The emotional formula of virality</p>
+            <h2 id="takeaway-title">Emotion in Motion</h2>
+            <p class="lead">Dive into the emotional language that pushes trends forward. Colours represent the emotional
+              tone, helping you spot which vibes spark the most popularity.</p>
           </div>
 
           <div class="legend-panel" role="complementary" aria-label="Emotion categories">
@@ -227,20 +241,22 @@
         </div>
       </section>
 
-    <!-- Section 6: Ingredients Quiz - Card grid + modal -->
-    <section id="section-conveyor" class="section scroll-section bg-lab" role="region" aria-labelledby="conveyor-title">
-      <div class="section-container">
-        <div class="section-intro">
-          <h2 id="conveyor-title">Build Your Trend Recipe</h2>
-          <p class="lead">Mix the right ingredients for viral success</p>
+      <!-- Section 6: Ingredients Quiz - Card grid + modal -->
+      <section id="section-conveyor" class="section scroll-section bg-lab" role="region"
+        aria-labelledby="conveyor-title">
+        <div class="section-container">
+          <div class="section-intro">
+            <h2 id="conveyor-title">Road to Virality</h2>
+            <p class="lead">Make your way down the road to For You Page fame. Each wall tests what you’ve learned about
+              emotions, sounds, timing, and trends. Are you ready to be TikTok famous?</p>
+          </div>
+
+          <div id="viz-conveyor" class="viz-container" data-viz="conveyor"></div>
         </div>
+      </section>
 
-        <div id="viz-conveyor" class="viz-container" data-viz="conveyor"></div>
-      </div>
-    </section>
-
-    <!-- Section 7: Conveyor Belt - Interactive guessing game -->
-    <!-- <section id="section-conveyor" class="section scroll-section bg-lab" role="region" aria-labelledby="conveyor-title">
+      <!-- Section 7: Conveyor Belt - Interactive guessing game -->
+      <!-- <section id="section-conveyor" class="section scroll-section bg-lab" role="region" aria-labelledby="conveyor-title">
       <div class="section-container">
         <div class="section-intro">
           <h2 id="conveyor-title">Ingredient Discovery</h2>
@@ -250,9 +266,9 @@
         <div id="viz-conveyor" class="viz-container" data-viz="conveyor"></div>
       </div>
     </section> -->
-  </main>
-      <!-- Section 6: Ingredients Quiz - Card grid + modal -->
-      <!-- <section id="section-ingredients" class="section scroll-section bg-lab" role="region"
+    </main>
+    <!-- Section 6: Ingredients Quiz - Card grid + modal -->
+    <!-- <section id="section-ingredients" class="section scroll-section bg-lab" role="region"
         aria-labelledby="ingredients-title">
         <div class="section-container layout-cards">
           <div class="section-intro">
@@ -268,7 +284,7 @@
     <!-- Footer -->
     <footer class="site-footer">
       <p>Created by Team TrendTokers for CSC316</p>
-      <a href="https://github.com/[repo]">View on GitHub</a>
+      <a href="https://github.com/hellokathylee/tiktok-tides">View on GitHub</a>
     </footer>
 
     <!-- Live Region for Screen Readers -->
