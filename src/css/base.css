@@ -16,7 +16,7 @@ body {
   font-family: var(--font-family-sans);
   font-size: var(--font-size-body-reg);
   line-height: 1.6;
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary); /* Changed from text-secondary for better visibility */
   background: #0a0a0f; /* Dark base - merged from line 201 */
   overflow-x: hidden;
   position: relative;
