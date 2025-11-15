@@ -1,5 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TikTok Tides - The lifecycle of viral trends">
+  <title>TikTok Tides | Where trends are born, surge, and transform culture</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/src/css/tokens.css">
+  <link rel="stylesheet" href="/src/css/base.css">
+  <link rel="stylesheet" href="/src/css/stopwatch.css">
+</head>
+<body>
+  <!-- Progress Bar -->
+  <div class="progress-bar" aria-hidden="true"></div>
+
+  <!-- Navigation -->
+  <nav class="nav-header" role="navigation" aria-label="Main navigation">
+    <div class="nav-container">
+      <h1 class="nav-title">TikTok Tides</h1>
+      <ul class="nav-links" role="list">
+        <li><a href="#section-ignite" aria-current="false">Ignite</a></li>
+        <li><a href="#section-surge" aria-current="false">Surge</a></li>
+        <li><a href="#section-spillover" aria-current="false">Spillover</a></li>
+        <li><a href="#section-fade" aria-current="false">Fade/Revival</a></li>
+        <li><a href="#section-takeaway" aria-current="false">Takeaway</a></li>
+        <li><a href="#section-ingredients" aria-current="false">Recipe</a></li>
+        <!-- <li><a href="#section-conveyor" aria-current="false">Conveyor</a></li> -->
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Skip Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Landing/Hero Section -->
+  <section id="section-landing" class="section hero-section bg-cosmos" role="region" aria-labelledby="hero-title">
+    <div class="scene-layer scene--stars" aria-hidden="true"></div>
+    <div class="starfield" aria-hidden="true"></div>
+    <div class="hero-content">
+      <h2 id="hero-title" class="hero-title gradient-text">TikTok Tides</h2>
+      <p class="hero-subtitle">Where trends are born, surge, and transform culture</p>
+      <div class="scroll-cue" aria-hidden="true">
+        <span>Dive into the data</span>
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <path d="M12 4 L12 20 M6 14 L12 20 L18 14" stroke="currentColor" stroke-width="2" fill="none"/>
+        </svg>
 
   <head>
     <meta charset="UTF-8">
@@ -228,6 +278,30 @@
         </div>
       </section>
 
+    <!-- Section 6: Ingredients Quiz - Card grid + modal -->
+    <section id="section-conveyor" class="section scroll-section bg-lab" role="region" aria-labelledby="conveyor-title">
+      <div class="section-container">
+        <div class="section-intro">
+          <h2 id="conveyor-title">Build Your Trend Recipe</h2>
+          <p class="lead">Mix the right ingredients for viral success</p>
+        </div>
+
+        <div id="viz-conveyor" class="viz-container" data-viz="conveyor"></div>
+      </div>
+    </section>
+
+    <!-- Section 7: Conveyor Belt - Interactive guessing game -->
+    <!-- <section id="section-conveyor" class="section scroll-section bg-lab" role="region" aria-labelledby="conveyor-title">
+      <div class="section-container">
+        <div class="section-intro">
+          <h2 id="conveyor-title">Ingredient Discovery</h2>
+          <p class="lead">Guess what makes a TikTok go viral</p>
+        </div>
+
+        <div id="viz-conveyor" class="viz-container" data-viz="conveyor"></div>
+      </div>
+    </section> -->
+  </main>
       <!-- Section 6: Ingredients Quiz - Card grid + modal -->
       <section id="section-ingredients" class="section scroll-section bg-lab" role="region"
         aria-labelledby="ingredients-title">
