@@ -59,12 +59,12 @@ export class PlanetViz extends EventEmitter {
 
   processData(data) {
     const artistMap = new Map();
-    
+
     data.forEach(song => {
       const artist = song.artist_name;
       const danceability = parseFloat(song.danceability);
       const energy = parseFloat(song.energy);
-      
+
       if (!artistMap.has(artist)) {
         artistMap.set(artist, {
           name: artist,
@@ -73,13 +73,13 @@ export class PlanetViz extends EventEmitter {
           energies: []
         });
       }
-      
+
       const artistData = artistMap.get(artist);
       artistData.songs.push(song.track_name);
       artistData.danceabilities.push(danceability);
       artistData.energies.push(energy);
     });
-    
+
     return Array.from(artistMap.values()).map(artist => ({
       name: artist.name,
       songCount: artist.songs.length,
@@ -91,23 +91,23 @@ export class PlanetViz extends EventEmitter {
 
   danceabilityToColor(danceability) {
     const colors = [
-      { value: 0.0, color: '#FF0000' },  
-      { value: 0.15, color: '#FF7F00' }, 
-      { value: 0.3, color: '#FFFF00' },  
-      { value: 0.45, color: '#00FF00' }, 
-      { value: 0.6, color: '#00FFFF' },  
-      { value: 0.75, color: '#0000FF' }, 
-      { value: 0.9, color: '#8B00FF' },  
-      { value: 1.0, color: '#FF00FF' }   
+      { value: 0.0, color: '#FF0000' },
+      { value: 0.15, color: '#FF7F00' },
+      { value: 0.3, color: '#FFFF00' },
+      { value: 0.45, color: '#00FF00' },
+      { value: 0.6, color: '#00FFFF' },
+      { value: 0.75, color: '#0000FF' },
+      { value: 0.9, color: '#8B00FF' },
+      { value: 1.0, color: '#FF00FF' }
     ];
-    
+
     for (let i = 0; i < colors.length - 1; i++) {
       if (danceability >= colors[i].value && danceability <= colors[i + 1].value) {
         const t = (danceability - colors[i].value) / (colors[i + 1].value - colors[i].value);
         return d3.interpolateRgb(colors[i].color, colors[i + 1].color)(t);
       }
     }
-    
+
     return colors[colors.length - 1].color;
   }
 
@@ -223,7 +223,7 @@ export class PlanetViz extends EventEmitter {
       .style('color', '#fff')
       .style('padding', '10px')
       .style('border-radius', '8px')
-      .style('border', '1px solid var(--color-accent-cyan)')
+      .style('border', '1px solid var(--color-accent-glint)')
       .style('pointer-events', 'none')
       .style('z-index', '1000')
       .style('font-size', '0.9rem');
@@ -307,22 +307,22 @@ export class PlanetViz extends EventEmitter {
       .attr('fill', d => this.danceabilityToColor(d.avgDanceability))
       .attr('stroke', '#fff')
       .attr('stroke-width', 2)
-      .on('mouseenter', function(event, d) {
+      .on('mouseenter', function (event, d) {
         d3.select(this).attr('data-original-r', sizeScale(d.songCount));
-        
+
         d3.select(this)
           .transition()
           .duration(200)
           .attr('stroke-width', 4)
           .attr('r', sizeScale(d.songCount) * 1.2);
-        
+
         tooltip
           .style('display', 'block')
           .transition()
           .duration(200)
           .style('opacity', 1);
       })
-      .on('mousemove', function(event, d) {
+      .on('mousemove', function (event, d) {
         tooltip
           .html(`
             <strong>${d.name}</strong>
@@ -336,20 +336,20 @@ export class PlanetViz extends EventEmitter {
           .style('left', (event.pageX + 15) + 'px')
           .style('top', (event.pageY - 15) + 'px');
       })
-      .on('mouseleave', function(event, d) {
+      .on('mouseleave', function (event, d) {
         const originalR = d3.select(this).attr('data-original-r') || sizeScale(d.songCount);
-        
+
         d3.select(this)
           .transition()
           .duration(200)
           .attr('stroke-width', 2)
           .attr('r', originalR);
-        
+
         tooltip
           .transition()
           .duration(200)
           .style('opacity', 0)
-          .on('end', function() {
+          .on('end', function () {
             d3.select(this).style('display', 'none');
           });
       });

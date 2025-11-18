@@ -395,7 +395,7 @@ export class StopwatchViz extends EventEmitter {
       })
       .attr('stroke', d => {
         const duration = d[0];
-        return duration >= min && duration <= max ? 'var(--color-accent-cyan)' : 'none';
+        return duration >= min && duration <= max ? 'var(--color-accent-glint)' : 'none';
       })
       .attr('stroke-width', d => {
         const duration = d[0];
@@ -421,7 +421,7 @@ export class StopwatchViz extends EventEmitter {
       .attr('y1', 0)
       .attr('x2', 0)
       .attr('y2', -this._geom.R * 0.8)
-      .attr('stroke', 'var(--color-accent-cyan)')
+      .attr('stroke', 'var(--color-accent-glint)')
       .attr('stroke-width', 3)
       .attr('opacity', 0.8);
 

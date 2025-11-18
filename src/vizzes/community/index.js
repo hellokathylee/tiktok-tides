@@ -178,7 +178,7 @@ export class CommunityViz extends EventEmitter {
       .append('circle')
       .attr('r', d => nodeScale(d.size))
       .attr('fill', 'var(--color-background-secondary)')
-      .attr('stroke', 'var(--color-accent-cyan)')
+      .attr('stroke', 'var(--color-accent-glint)')
       .attr('stroke-width', 2);
 
     // Sound nodes
@@ -189,7 +189,7 @@ export class CommunityViz extends EventEmitter {
       .attr('x', -15)
       .attr('y', -15)
       .attr('rx', 6)
-      .attr('fill', 'var(--color-accent-magenta)')
+      .attr('fill', 'var(--color-accent-blaze)')
       .attr('opacity', 0.8);
 
     // Labels
