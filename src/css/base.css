@@ -1476,15 +1476,15 @@ circle[data-type="bubble"] {
   height: 400px;
   border-radius: 6px;
   background: linear-gradient(
-    to top,
-    #FF0000 0%,      /* Red - 0.0 */
-    #FF7F00 15%,     /* Orange - 0.15 */
-    #FFFF00 30%,     /* Yellow - 0.3 */
-    #00FF00 45%,     /* Green - 0.45 */
-    #00FFFF 60%,     /* Cyan - 0.6 */
-    #0000FF 75%,     /* Blue - 0.75 */
-    #8B00FF 90%,     /* Purple - 0.9 */
-    #FF00FF 100%     /* Magenta - 1.0 */
+    to bottom,
+    #FF00FF 0%,      /* Magenta - 1.0 */
+    #8B00FF 10%,     /* Purple - 0.9 */
+    #0000FF 25%,     /* Blue - 0.75 */
+    #00FFFF 40%,     /* Cyan - 0.6 */
+    #00FF00 55%,     /* Green - 0.45 */
+    #FFFF00 70%,     /* Yellow - 0.3 */
+    #FF7F00 85%,     /* Orange - 0.15 */
+    #FF0000 100%     /* Red - 0.0 */
   );
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.2);
@@ -1492,7 +1492,7 @@ circle[data-type="bubble"] {
 
 .color-gradient-labels {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   justify-content: space-between;
   height: 400px;
   font-size: 1rem;
