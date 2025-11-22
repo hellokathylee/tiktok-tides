@@ -137,6 +137,23 @@ export class RankingViz extends EventEmitter {
       .attr('role', 'img')
       .attr('aria-label', 'Category visualization showing ranking and interaction');
 
+    // --- Reset Button ---
+    const resetBtn = d3.select(this.container)
+      .append('div')
+      .attr('class', 'viz-reset-button')
+      .style('position', 'absolute')
+      .style('top', '10px')
+      .style('right', '10px')
+      .style('padding', '8px 16px')
+      .style('background', '#2c2c2cff')
+      .style('border', '1px solid #ccc')
+      .style('border-radius', '10px')
+      .style('cursor', 'pointer')
+      .style('font-weight', 'bold')
+      .style('z-index', 2000)
+      .text('Reset')
+      .on('click', () => this.animatedReset());
+
     const centerGroup = this.svg.append('g')
       .attr(
         'transform',
@@ -587,5 +604,60 @@ export class RankingViz extends EventEmitter {
         }, 400);
       });
     });
+  }
+
+  async animatedReset() {
+    const pages = d3.select(this.container).selectAll('g.page');
+
+    const duration = 600;
+
+    pages.each(function () {
+      const page = d3.select(this);
+      const cover = page.select('.cover-group');
+
+      // original position
+      const ox = +page.attr('data-ox');
+      const oy = +page.attr('data-oy');
+
+      cover
+        .transition()
+        .duration(duration)
+        .ease(d3.easeCubicOut)
+        .attr('transform', `translate(0,0) rotate(0) scale(1)`);
+
+      const bg = page.select('.page-bg');
+
+      bg.transition()
+        .duration(duration)
+        .style('filter', 'none')
+        .style('opacity', 1);
+    });
+
+    await new Promise(resolve => setTimeout(resolve, duration + 50));
+
+    this.resetVizHard();
+  }
+
+
+  resetVizHard() {
+    // kill popup
+    if (this.popup) {
+      this.popup.remove();
+      this.popup = null;
+    }
+    d3.select(this.container).select('.overlay').remove();
+
+    // stop audio
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio.currentTime = 0;
+    }
+
+    // clear viz
+    this.container.innerHTML = '';
+    this.state.currentStep = 0;
+
+    // rebuild everything
+    this.render();
   }
 }
