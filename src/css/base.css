@@ -1370,7 +1370,7 @@ circle[data-type="bubble"] {
   background: rgba(10, 10, 15, 0.9);
   padding: 22px 26px;
   border-radius: 8px;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   backdrop-filter: blur(10px);
   border: 1px solid var(--color-border-interactive);
   color: var(--color-text-primary);
@@ -1382,7 +1382,7 @@ circle[data-type="bubble"] {
   display: block;
   color: var(--color-accent-cyan);
   margin-bottom: 6px;
-  font-size: 1.15rem;
+  font-size: 1.3rem;
 }
 
 /* Legend tooltips */
@@ -1454,7 +1454,7 @@ circle[data-type="bubble"] {
 
 .color-legend-title {
   margin-bottom: 14px;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   color: var(--color-text-primary);
 }
 
@@ -1462,7 +1462,7 @@ circle[data-type="bubble"] {
   display: block;
   color: var(--color-accent-magenta);
   margin-bottom: 8px;
-  font-size: 1.15rem;
+  font-size: 1.3rem;
 }
 
 .color-gradient-container {
@@ -1495,7 +1495,7 @@ circle[data-type="bubble"] {
   flex-direction: column-reverse;
   justify-content: space-between;
   height: 400px;
-  font-size: 1rem;
+  font-size: 1.15rem;
   padding: 0;
 }
 
@@ -1506,7 +1506,7 @@ circle[data-type="bubble"] {
 
 .color-gradient-labels small {
   display: block;
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--color-text-secondary);
   font-style: italic;
   margin-top: 2px;
@@ -1784,20 +1784,35 @@ circle[data-type="bubble"] {
 
 .year-btn {
   font-weight: var(--font-weight-semibold);
-  padding: 14px 32px;
+  padding: 16px 36px;
   background: var(--color-background-secondary);
   color: var(--color-text-primary);
-  border: 1px solid var(--color-border-interactive);
+  border: 2px solid var(--color-border-interactive);
   border-radius: 6px;
   cursor: pointer;
   transition: all var(--duration-micro) var(--easing-standard);
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  position: relative;
+  animation: pulse-border 3s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: var(--color-border-interactive);
+    box-shadow: 0 0 0 rgba(0, 255, 224, 0);
+  }
+  50% {
+    border-color: var(--color-accent-cyan);
+    box-shadow: 0 0 15px rgba(0, 255, 224, 0.6);
+  }
 }
 
 .year-btn:hover {
   background: var(--color-background-elevated);
   border-color: var(--color-accent-cyan);
   transform: translateY(-1px);
+  animation: none;
+  box-shadow: 0 0 20px rgba(0, 255, 224, 0.8);
 }
 
 .year-btn.active {
@@ -1805,6 +1820,7 @@ circle[data-type="bubble"] {
   color: var(--color-background-primary);
   border-color: transparent;
   box-shadow: 0 4px 12px rgba(0, 255, 224, 0.3);
+  animation: none;
 }
 
 /* Ingredients Grid */
