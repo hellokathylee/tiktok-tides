@@ -150,7 +150,24 @@ export class ConveyorViz extends EventEmitter {
     `;
     this.container.appendChild(header);
 
-    // Create conveyor belt wrapper
+    // Create controls (moved above belt)
+    const controls = document.createElement('div');
+    controls.className = 'conveyor-controls';
+    controls.innerHTML = `
+      <button class="btn-primary start-btn" aria-label="Start conveyor belt">
+        Start Conveyor
+      </button>
+      <button class="btn-secondary restart-btn" aria-label="Restart from beginning" style="display:none;">
+        Restart
+      </button>
+    `;
+    this.container.appendChild(controls);
+
+    // Create interaction panel (moved above belt)
+    const panel = this.createInteractionPanel();
+    this.container.appendChild(panel);
+
+    // Create conveyor belt wrapper (now below controls and panel)
     const beltWrapper = document.createElement('div');
     beltWrapper.className = 'conveyor-belt-wrapper';
     
@@ -168,23 +185,6 @@ export class ConveyorViz extends EventEmitter {
 
     beltWrapper.appendChild(belt);
     this.container.appendChild(beltWrapper);
-
-    // Create interaction panel
-    const panel = this.createInteractionPanel();
-    this.container.appendChild(panel);
-
-    // Create controls
-    const controls = document.createElement('div');
-    controls.className = 'conveyor-controls';
-    controls.innerHTML = `
-      <button class="btn-primary start-btn" aria-label="Start conveyor belt">
-        Start Conveyor
-      </button>
-      <button class="btn-secondary restart-btn" aria-label="Restart from beginning" style="display:none;">
-        Restart
-      </button>
-    `;
-    this.container.appendChild(controls);
 
     // Position first box at center
     this.updateBeltPosition();
