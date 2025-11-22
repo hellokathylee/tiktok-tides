@@ -15,7 +15,8 @@ export class ConveyorViz extends EventEmitter {
       currentGuess: '',
       score: 0,
       totalAttempts: 0,
-      revealed: false
+      revealed: false,
+      answeredCorrectly: [] // Track which questions were answered correctly
     };
     this.options = { ...DEFAULT_OPTIONS };
     this.mounted = false;
@@ -212,6 +213,7 @@ export class ConveyorViz extends EventEmitter {
       <div class="box-answer-label">Answer:</div>
       <div class="box-answer">${item.answer}</div>
       <div class="box-checkmark">✓</div>
+      <div class="box-xmark">✗</div>
     `;
 
     box.appendChild(front);
@@ -483,10 +485,18 @@ export class ConveyorViz extends EventEmitter {
 
     this.state.revealed = true;
 
-    // Flip current box
+    // Track if this was answered correctly
+    this.state.answeredCorrectly[this.state.currentIndex] = lastGuessCorrect;
+
+    // Flip current box and mark as correct or incorrect
     const currentBox = this.container.querySelector(`.conveyor-box[data-index="${this.state.currentIndex}"]`);
     if (currentBox) {
       currentBox.classList.add('flipped');
+      if (lastGuessCorrect) {
+        currentBox.classList.add('correct');
+      } else {
+        currentBox.classList.add('incorrect');
+      }
     }
 
     // Hide reveal button, show next button
@@ -578,12 +588,13 @@ export class ConveyorViz extends EventEmitter {
       currentGuess: '',
       score: 0,
       totalAttempts: 0,
-      revealed: false
+      revealed: false,
+      answeredCorrectly: []
     };
 
     // Reset all boxes (remove flipped class)
     const boxes = this.container.querySelectorAll('.conveyor-box');
-    boxes.forEach(box => box.classList.remove('flipped', 'active'));
+    boxes.forEach(box => box.classList.remove('flipped', 'active', 'correct', 'incorrect'));
 
     // Re-render
     this.render();

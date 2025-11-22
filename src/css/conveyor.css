@@ -459,6 +459,57 @@
     0 4px 8px rgba(0, 0, 0, 0.5);
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
   transform: translateZ(25px);
+  display: none;
+}
+
+.box-xmark {
+  font-size: 3rem;
+  margin-top: auto;
+  opacity: 0.7;
+  text-shadow: 
+    0 0 30px rgba(255, 80, 80, 0.6),
+    0 4px 8px rgba(0, 0, 0, 0.5);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+  transform: translateZ(25px);
+  display: none;
+}
+
+/* Show appropriate mark based on correctness */
+.conveyor-box.correct .box-checkmark {
+  display: block;
+}
+
+.conveyor-box.incorrect .box-xmark {
+  display: block;
+}
+
+/* Red styling for incorrect answers */
+.conveyor-box.incorrect .box-back {
+  background-color: rgb(45, 25, 25);
+  background-image: 
+    linear-gradient(135deg, 
+      rgba(255, 80, 80, 0.4) 0%, 
+      rgba(220, 60, 60, 0.5) 50%,
+      rgba(180, 40, 40, 0.6) 100%
+    );
+  border: 3px solid rgba(255, 80, 80, 0.7);
+  border-top: 2px solid rgba(255, 120, 120, 0.9);
+  border-left: 2px solid rgba(255, 100, 100, 0.8);
+  border-bottom: 3px solid rgba(180, 40, 40, 0.6);
+  border-right: 3px solid rgba(180, 40, 40, 0.5);
+  box-shadow: 
+    0 30px 60px rgba(255, 80, 80, 0.4),
+    0 15px 30px rgba(0, 0, 0, 0.5),
+    inset 0 3px 6px rgba(255, 100, 100, 0.4),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.conveyor-box.incorrect .box-answer {
+  color: #ff8080;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.8),
+    0 4px 12px rgba(255, 80, 80, 0.6),
+    0 0 30px rgba(255, 80, 80, 0.4);
 }
 
 /* Flipped State */
@@ -478,8 +529,13 @@
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
 }
 
+/* Red filter for completed incorrect boxes */
+.conveyor-box.flipped.incorrect:not(.active) {
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
+}
+
 /* Reset completed boxes to normal turquoise (not enhanced) */
-.conveyor-box.flipped:not(.active) .box-back {
+.conveyor-box.flipped.correct:not(.active) .box-back {
   background-color: rgb(25, 35, 45);
   background-image: 
     linear-gradient(135deg, 
@@ -498,13 +554,33 @@
     inset 0 -1px 0 rgba(0, 0, 0, 0.5);
 }
 
+/* Red styling for completed incorrect boxes */
+.conveyor-box.flipped.incorrect:not(.active) .box-back {
+  background-color: rgb(45, 25, 25);
+  background-image: 
+    linear-gradient(135deg, 
+      rgba(255, 80, 80, 0.35) 0%, 
+      rgba(220, 60, 60, 0.45) 50%,
+      rgba(180, 40, 40, 0.55) 100%
+    );
+  border: 3px solid rgba(255, 80, 80, 0.6);
+  border-top: 2px solid rgba(255, 120, 120, 0.8);
+  border-left: 2px solid rgba(255, 100, 100, 0.7);
+  border-bottom: 3px solid rgba(180, 40, 40, 0.5);
+  box-shadow: 
+    0 25px 50px rgba(255, 80, 80, 0.3),
+    0 10px 20px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 100, 100, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+}
+
 /* When flipped AND active, maintain the enhanced 3D */
 .conveyor-box.flipped.active {
   transform: scale(1.2) translateY(-20px) translateZ(50px) rotateX(0deg) rotateY(0deg);
 }
 
 /* Enhanced active back face when flipped */
-.conveyor-box.active.flipped .box-back {
+.conveyor-box.active.flipped.correct .box-back {
   background-color: rgb(30, 40, 50);
   background-image: 
     linear-gradient(135deg, 
@@ -519,6 +595,24 @@
     inset 0 2px 4px rgba(0, 255, 224, 0.5),
     inset 0 -2px 0 rgba(0, 0, 0, 0.6),
     0 0 40px rgba(0, 255, 224, 0.4);
+}
+
+/* Enhanced active back face when flipped and incorrect */
+.conveyor-box.active.flipped.incorrect .box-back {
+  background-color: rgb(50, 30, 30);
+  background-image: 
+    linear-gradient(135deg, 
+      rgba(255, 80, 80, 0.5) 0%, 
+      rgba(220, 60, 60, 0.6) 50%,
+      rgba(180, 40, 40, 0.7) 100%
+    );
+  border: 3px solid rgba(255, 80, 80, 0.8);
+  box-shadow: 
+    0 30px 60px rgba(255, 80, 80, 0.4),
+    0 15px 30px rgba(0, 0, 0, 0.5),
+    inset 0 2px 4px rgba(255, 100, 100, 0.5),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(255, 80, 80, 0.4);
 }
 
 /* Interaction Panel */
