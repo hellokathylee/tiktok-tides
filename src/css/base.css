@@ -1528,9 +1528,18 @@ circle[data-type="bubble"] {
 
   .color-legend {
     left: 40px;
-    bottom: 60px;
+    bottom: 100px;
     width: min(400px, calc(100% - 80px));
     padding: 16px;
+  }
+
+  .annotation-rail {
+    bottom: var(--space-4);
+  }
+
+  .year-btn {
+    padding: 10px 24px;
+    font-size: 0.95rem;
   }
 }
 
@@ -1553,12 +1562,25 @@ circle[data-type="bubble"] {
   .color-legend {
     left: 10px;
     right: auto;
-    bottom: 10px;
+    bottom: 80px;
     width: min(400px, calc(100% - 20px));
   }
 
   .color-legend-title {
     font-size: 0.8rem;
+  }
+
+  .annotation-rail {
+    bottom: var(--space-2);
+  }
+
+  .year-selector {
+    gap: 8px;
+  }
+
+  .year-btn {
+    padding: 8px 18px;
+    font-size: 0.9rem;
   }
 }
 
@@ -1586,12 +1608,12 @@ circle[data-type="bubble"] {
   }
 
   .color-legend {
-    position: relative;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    width: 100%;
-    margin: 10px;
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 70px;
+    width: calc(100% - 20px);
+    margin: 0;
     padding: 12px;
   }
 
@@ -1610,6 +1632,20 @@ circle[data-type="bubble"] {
 
   .color-gradient-labels small {
     font-size: 0.65rem;
+  }
+
+  .annotation-rail {
+    bottom: 10px;
+  }
+
+  .year-selector {
+    gap: 6px;
+    margin-bottom: 0.5rem;
+  }
+
+  .year-btn {
+    padding: 6px 14px;
+    font-size: 0.85rem;
   }
 }
 
