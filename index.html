@@ -13,6 +13,11 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
       rel="stylesheet">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=TikTok+Sans:opsz,wght@12..36,300..900&display=swap"
+      rel="stylesheet">
+
     <!-- Styles -->
     <link rel="stylesheet" href="/src/css/tokens.css">
     <link rel="stylesheet" href="/src/css/base.css">
@@ -73,17 +78,18 @@
 
           <div class="legend-chips">
             <div class="chip">
-              <span class="chip-icon">🕒</span>
+              <span class="chip-icon">📐</span>
               <span><strong>Angle</strong> (swept arc) = <em>Video duration (sec)</em></span>
             </div>
             <div class="chip">
-              <span class="chip-icon">🟢</span>
+              <span class="chip-icon">📏</span>
               <span><strong>Radius</strong> = <em>Average playCount</em> (bigger = more plays)</span>
             </div>
             <div class="chip">
               <span class="chip-icon">🎨</span>
               <span><strong>Color</strong> = Distinct duration groups</span>
             </div>
+            Press the top button to play the animation: sectors sweep out in order of video duration.
           </div>
         </section>
 
@@ -227,7 +233,11 @@
           <div class="legend-panel" role="complementary" aria-label="Emotion categories">
             <h3>Emotion Categories</h3>
             <ul class="emotion-legend" role="list"></ul>
+            
           </div>
+          <button class="emotion-sort-toggle" aria-pressed="false">
+              Sort into columns
+            </button>
 
           <div id="viz-emotion" class="viz-container" data-viz="emotion"></div>
 
