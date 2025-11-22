@@ -137,6 +137,70 @@ export class RankingViz extends EventEmitter {
       .attr('role', 'img')
       .attr('aria-label', 'Category visualization showing ranking and interaction');
 
+    // --- info button ---
+    const infoBtn = d3.select(this.container)
+      .append('div')
+      .attr('class', 'viz-info-button')
+      .style('position', 'absolute')
+      .style('top', '10px')
+      .style('left', '10px')
+      .style('padding', '8px 16px')
+      .style('background', '#2c2c2cff')
+      .style('border', '1px solid #ccc')
+      .style('border-radius', '10px')
+      .style('cursor', 'pointer')
+      .style('font-weight', 'bold')
+      .style('color', 'white')
+      .style('z-index', 2000)
+      .html(`
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+      <line x1="12" y1="10" x2="12" y2="16" stroke="white" stroke-width="2" />
+      <circle cx="12" cy="7" r="1.5" fill="white"/>
+    </svg>
+  `);
+
+    let infoTooltipOpen = false;
+
+    const infoTooltip = d3.select(this.container)
+      .append('div')
+      .attr('class', 'viz-info-tooltip')
+      .style('position', 'absolute')
+      .style('top', '55px')
+      .style('left', '10px')
+      .style('padding', '15px')
+      .style('background', 'black')
+      .style('border-radius', '12px')
+      .style('box-shadow', '0 4px 12px rgba(0,0,0,0.15)')
+      .style('width', '260px')
+      .style('opacity', 0)
+      .style('pointer-events', 'none')
+      .style('transition', 'opacity 0.25s ease')
+      .html(`
+    <div style="font-size: 15px; font-weight: 600; margin-bottom: 6px;">
+      About this visualization
+    </div>
+    <div style="font-size: 13px; line-height: 1.4;">
+      This ranking layout is inspired by the viral 
+      <b>Pyramid Ranking Trend</b> on TikTok.
+    </div>
+    <div style="margin-top: 10px;">
+      <a href="https://www.tiktok.com/discover/pyramid-ranking-trend" 
+         target="_blank" 
+         style="color: #0077ff; font-size: 13px; text-decoration: underline;">
+         View the original trend on TikTok →
+      </a>
+    </div>
+  `);
+
+    infoBtn.on('click', () => {
+      infoTooltipOpen = !infoTooltipOpen;
+
+      infoTooltip
+        .style('opacity', infoTooltipOpen ? 1 : 0)
+        .style('pointer-events', infoTooltipOpen ? 'auto' : 'none');
+    });
+
     // --- Reset Button ---
     const resetBtn = d3.select(this.container)
       .append('div')
