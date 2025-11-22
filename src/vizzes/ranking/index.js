@@ -191,7 +191,7 @@ export class RankingViz extends EventEmitter {
       .append('g')
       .attr('class', 'page')
       .attr('transform', d => `translate(${columnXPositions(d.row)[d.column]}, ${d.y})`)
-      .style('cursor', 'pointer');
+      .style('cursor', d => d.coverFallen ? 'pointer' : 'default');
 
     // --- categories page ---
     const gifMap = {
@@ -432,6 +432,8 @@ export class RankingViz extends EventEmitter {
                   scale(${randomBounce}, 0.6)
               `);
           d.coverFallen = true;
+          d3.select(this).style('cursor', 'pointer');
+
         }, delayTime);
 
         fallAudio.play().catch(error => {
