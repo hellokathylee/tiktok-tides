@@ -244,6 +244,26 @@ export class RankingViz extends EventEmitter {
           .text(d.category);
       });
 
+    const glow = defss.append("filter") // category glow
+      .attr("id", "hoverGlow")
+      .attr("width", "300%")
+      .attr("height", "300%")
+      .attr("x", "-100%")
+      .attr("y", "-100%");
+
+    glow.append("feGaussianBlur")
+      .attr("stdDeviation", 6)
+      .attr("result", "blur1");
+
+    glow.append("feGaussianBlur")
+      .attr("stdDeviation", 14)
+      .attr("result", "blur2");
+
+    const merge = glow.append("feMerge");
+    merge.append("feMergeNode").attr("in", "blur1");
+    merge.append("feMergeNode").attr("in", "blur2");
+    merge.append("feMergeNode").attr("in", "SourceGraphic");
+
     // --- cover page ---
     const defs = this.svg.append('defs');
 
@@ -336,6 +356,22 @@ export class RankingViz extends EventEmitter {
     pages.on('mouseenter', function (event, d) {
       if (isAudioPlaying) return;
 
+      const bg = d3.select(this).select('.page-bg'); // category glow
+
+      bg
+        .style('filter', 'url(#hoverGlow)')
+        .transition()
+        .duration(350)
+        .style('opacity', 1)
+        .transition()
+        .duration(300)
+        .style('filter', 'url(#hoverGlow) brightness(1.2)');
+
+      bg.select('rect:last-of-type')
+        .transition()
+        .duration(300)
+        .style('fill', 'rgba(0,0,0,0.2)');
+
       const cover = d3.select(this).select('.cover-group');
 
       d3.select(this).select('rect')
@@ -422,6 +458,19 @@ export class RankingViz extends EventEmitter {
     });
 
     pages.on('mouseleave', function (event, d) { // reset hover effects
+      const bg = d3.select(this).select('.page-bg'); // category glow
+
+      bg
+        .transition()
+        .duration(300)
+        .style('filter', 'none')
+        .style('opacity', 1);  // reset
+
+      bg.select('rect:last-of-type')
+        .transition()
+        .duration(250)
+        .style('fill', 'rgba(0,0,0,0.20)');
+
       d3.select(this).select('rect') // page brightness
         .transition()
         .duration(300)
