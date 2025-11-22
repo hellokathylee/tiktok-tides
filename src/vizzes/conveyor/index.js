@@ -544,6 +544,12 @@ export class ConveyorViz extends EventEmitter {
   }
 
   finish() {
+    // Remove active class from the last card
+    const currentBox = this.container.querySelector(`.conveyor-box[data-index="${this.state.currentIndex}"]`);
+    if (currentBox) {
+      currentBox.classList.remove('active');
+    }
+
     const panel = this.container.querySelector('.interaction-panel');
     panel.innerHTML = `
       <div class="completion-message">
