@@ -6,7 +6,9 @@ export class StopwatchViz extends EventEmitter {
   constructor() {
     super();
     this.container = null;
-    this.data = null;         // Will hold [[durationSeconds, meanPlayCount], ...] sorted ascending by duration
+    // Will hold [[binEndSeconds, meanPlayCount, meanDuration], ...] sorted ascending by binEndSeconds.
+    // Durations are grouped into 10s bins: 0–10, 10–20, 20–30, ...
+    this.data = null;
     this.rawData = null;      // Optional: raw CSV rows (if needed later)
     this.state = {
       currentStep: 0,
@@ -17,6 +19,9 @@ export class StopwatchViz extends EventEmitter {
     };
     this.options = { ...DEFAULT_OPTIONS, reducedMotion: prefersReducedMotion() };
     this.mounted = false;
+
+    // binning config (seconds)
+    this.binSize = 10;
 
     // D3 handles
     this.svg = null;
@@ -62,7 +67,7 @@ export class StopwatchViz extends EventEmitter {
     this.emit(VIZ_EVENTS.DATA_READY);
   }
 
-  // --- Data loading (requested chunk, with processing added) -----------------
+  // --- Data loading (with 10s binning) ---------------------------------------
   async loadData() {
     try {
       const [data] = await Promise.all([
@@ -77,17 +82,45 @@ export class StopwatchViz extends EventEmitter {
         +d['videoMeta/duration'] <= 60
       );
 
-      // Group by exact duration (seconds) -> mean playCount
-      let grouped = d3.rollups(
+      const binSize = this.binSize;
+      const maxDuration = 60;
+      const maxBinIndex = maxDuration / binSize - 1; // 0..5 for 0–60
+
+      // Group directly into bins of width 10 seconds:
+      // 0–10s  -> binEnd = 10
+      // 10–20s -> binEnd = 20
+      // ...
+      // 50–60s -> binEnd = 60
+      let binned = d3.rollups(
         rows,
-        v => d3.mean(v, d => +d.playCount),
-        d => +d['videoMeta/duration']
-      ).filter(d => Number.isFinite(d[0]) && Number.isFinite(d[1]));
+        v => {
+          const meanPlayCount = d3.mean(v, d => +d.playCount);
+          const meanDuration = d3.mean(v, d => +d['videoMeta/duration']);
+          return { meanPlayCount, meanDuration };
+        },
+        d => {
+          const durRaw = +d['videoMeta/duration'];
+          const dur = Math.max(0, Math.min(durRaw, maxDuration)); // clamp
+          let binIndex = Math.floor(dur / binSize);
+          // Ensure 60s stays in the last bin (50–60)
+          binIndex = Math.min(binIndex, maxBinIndex);
+          const binEnd = (binIndex + 1) * binSize;
+          return binEnd; // numeric key: 10, 20, 30, 40, 50, 60
+        }
+      )
+      // Flatten to [binEnd, meanPlayCount, meanDuration]
+      .map(([binEnd, stats]) => [binEnd, stats.meanPlayCount, stats.meanDuration])
+      .filter(d =>
+        Number.isFinite(d[0]) && // binEnd
+        Number.isFinite(d[1]) && // meanPlayCount
+        Number.isFinite(d[2])    // meanDuration
+      );
 
-      // Sort by duration ascending for consistent angle mapping
-      grouped.sort((a, b) => d3.ascending(a[0], b[0]));
+      // Sort by binEnd ascending for consistent angle mapping
+      binned.sort((a, b) => d3.ascending(a[0], b[0]));
 
-      this.data = grouped; // [[durationSec, meanPlayCount], ...]
+      // this.data = [[binEndSec, meanPlayCount, meanDuration], ...]
+      this.data = binned;
     } catch (error) {
       console.error('Error loading CSV data:', error);
       throw error;
@@ -99,7 +132,7 @@ export class StopwatchViz extends EventEmitter {
     if (this.mounted) return;
     this.render();
     this.mounted = true;
-       this.emit(VIZ_EVENTS.ENTER_COMPLETE);
+    this.emit(VIZ_EVENTS.ENTER_COMPLETE);
   }
 
   unmount() {
@@ -121,7 +154,7 @@ export class StopwatchViz extends EventEmitter {
   destroy() {
     this.unmount();
     this.data = null;
-    this.rawData = null;
+       this.rawData = null;
     this.state = null;
     this.events.clear();
   }
@@ -194,19 +227,22 @@ export class StopwatchViz extends EventEmitter {
         'The animation only plays when the top button is pressed.'
       );
 
+    // defs for text paths, etc.
+    const defs = this.svg.append('defs');
+
     // Centering group
     this.g = this.svg.append('g')
       .attr('transform', `translate(${width / 2}, ${height / 2})`);
 
-    // Radii (match second implementation)
+    // Radii
     const R = Math.min(width, height) / 2 - margin;
     const ringOuter = R;
     const ringInner = R * 0.9;
     const sectorMaxRadius = R * 0.78;
     const sectorMinRadius = Math.max(12, R * 0.12);
 
-    // Perimeter arc thickness & store it
-    const arcThickness = Math.max(6, (sectorMaxRadius - sectorMinRadius) * 0.05);
+    // Perimeter arc thickness & store it (THICKER ARCS)
+    const arcThickness = Math.max(10, (sectorMaxRadius - sectorMinRadius) * 0.10);
 
     // Save geom
     Object.assign(this._geom, {
@@ -287,9 +323,11 @@ export class StopwatchViz extends EventEmitter {
     // Scales
     this.angleScale = d3.scaleLinear().domain([0, 60]).range([0, 2 * Math.PI]);
     const pcExtent = d3.extent(this.data, d => d[1]) || [0, 1];
+    const sectorMinR = sectorMinRadius;
+    const sectorMaxR = sectorMaxRadius;
     this.rScale = d3.scaleSqrt()
       .domain(pcExtent)
-      .range([sectorMinRadius, sectorMaxRadius])
+      .range([sectorMinR, sectorMaxR])
       .nice();
 
     // Colors
@@ -308,30 +346,88 @@ export class StopwatchViz extends EventEmitter {
       .startAngle(0); // start at 12 o'clock
 
     this.paths = sectorsG.selectAll('path.sector')
-      .data(this.data) // data is ascending by duration
+      .data(this.data) // data is ascending by binEnd
       .join('path')
       .attr('class', 'sector')
       .attr('fill', d => color(d[0]))
       .attr('stroke', 'none')
       .style('opacity', 0.75)
       // Z-order: longest durations at the bottom, shortest on top
-      .sort((a, b) => d3.descending(a[0], b[0])); // larger duration first in DOM (drawn underneath)
+      .sort((a, b) => d3.descending(a[0], b[0])); // larger binEnd first in DOM (drawn underneath)
 
     // Draw sectors in their final static state (no auto animation)
     this.paths.attr('d', d => {
       const outerR = this.rScale(d[1]);
-      const end = this.angleScale(d[0]); // duration -> sweep angle
+      const meanDuration = d[2];
+      const end = this.angleScale(meanDuration); // use meanDuration instead of binEnd
       return arcFor(outerR).endAngle(end)(d);
+    });
+
+    // DURATION BIN LABELS ALONG ARCS (curved text)
+    const binSizeForLabel = this.binSize || 10;
+    const fmtInt = d3.format('d');
+
+    const labelGroups = sectorsG.selectAll('g.bin-label-group')
+      .data(this.data)
+      .join('g')
+      .attr('class', 'bin-label-group')
+      .attr('pointer-events', 'none');
+
+    labelGroups.each((d, i, nodes) => {
+      const outerR = this.rScale(d[1]);
+      const innerR = outerR - arcThickness;
+
+      // Move label slightly "down" inside the ring towards the centre
+      const labelOffset = 6; // tweak as needed (px)
+      const rLabel = innerR + arcThickness / 2 - labelOffset;
+
+      const meanDuration = d[2];
+      const endAngle = this.angleScale(meanDuration);
+      const pathId = `bin-label-path-${d[0]}`;
+
+      // Create an (invisible) arc path at the adjusted label radius
+      const labelArc = d3.arc()
+        .innerRadius(rLabel)
+        .outerRadius(rLabel)
+        .startAngle(0)
+        .endAngle(endAngle);
+
+      defs.append('path')
+        .attr('id', pathId)
+        .attr('d', labelArc())
+        .attr('fill', 'none')
+        .attr('stroke', 'none');
+
+      const g = d3.select(nodes[i]);
+
+      const labelText = g.append('text')
+        .attr('class', 'bin-label')
+        .attr('text-anchor', 'middle')
+        .attr('alignment-baseline', 'middle');
+
+      labelText.append('textPath')
+        .attr('href', `#${pathId}`)
+        // Shift towards the start of the arc so it's on the "left" side
+        .attr('startOffset', '25%')
+        .text(() => {
+          const binEnd = d[0];
+          const binStart = binEnd - binSizeForLabel;
+          return `${fmtInt(binStart)}–${fmtInt(binEnd)}s`;
+        });
     });
 
     // Tooltips & hover (only custom HTML tooltip, no SVG <title> on arcs)
     this.paths
       .on('pointerenter', (event, d) => {
-        const [duration, avgPC] = d;
+        const [binEnd, avgPC, meanDuration] = d;
+        const binSize = this.binSize || 10;
+        const binStart = binEnd - binSize;
+
         this.tooltip
           .style('opacity', 1)
           .html(
-            `<strong>Duration:</strong> ${duration}s<br>` +
+            `<strong>Duration bin:</strong> ${binStart}s–${binEnd}s<br>` +
+            `<strong>Avg duration in bin:</strong> ${d3.format('.1f')(meanDuration)}s<br>` +
             `<strong>Avg playCount:</strong> ${d3.format(',.2f')(avgPC)}`
           )
           .style('left', `${event.clientX}px`)
@@ -389,7 +485,7 @@ export class StopwatchViz extends EventEmitter {
       .startAngle(0);
 
     // Reset & animate in order of current selection:
-    // due to .sort(descending) in render(), index 0 = longest duration,
+    // due to .sort(descending) in render(), index 0 = largest binEnd,
     // so the longest durations animate first and are visually underneath.
     this.paths.interrupt();
     this.paths.attr('d', d => arcFor(this.rScale(d[1])).endAngle(0)(d));
@@ -400,7 +496,8 @@ export class StopwatchViz extends EventEmitter {
       .ease(d3.easeCubicOut)
       .attrTween('d', d => {
         const outerR = this.rScale(d[1]);
-        const end = this.angleScale(d[0]); // duration -> sweep angle
+        const meanDuration = d[2];
+        const end = this.angleScale(meanDuration); // use meanDuration
         const interp = d3.interpolateNumber(0, end);
         const arc = arcFor(outerR);
         return t => arc.endAngle(interp(t))(d);
@@ -436,21 +533,30 @@ export class StopwatchViz extends EventEmitter {
   highlightDurationRange(min, max) {
     if (!this.paths) return;
 
+    const binSize = this.binSize || 10;
+
     this.paths
       .interrupt()
       .transition()
       .duration(180)
       .style('opacity', d => {
-        const duration = d[0];
-        return duration >= min && duration <= max ? 1 : 0.25;
+        const binEnd = d[0];
+        const binStart = binEnd - binSize;
+        // Highlight if bin overlaps [min, max]
+        const overlaps = binEnd >= min && binStart <= max;
+        return overlaps ? 1 : 0.25;
       })
       .attr('stroke', d => {
-        const duration = d[0];
-        return duration >= min && duration <= max ? 'var(--color-accent-cyan)' : 'none';
+        const binEnd = d[0];
+        const binStart = binEnd - binSize;
+        const overlaps = binEnd >= min && binStart <= max;
+        return overlaps ? 'var(--color-accent-cyan)' : 'none';
       })
       .attr('stroke-width', d => {
-        const duration = d[0];
-        return duration >= min && duration <= max ? 2.5 : 0;
+        const binEnd = d[0];
+        const binStart = binEnd - binSize;
+        const overlaps = binEnd >= min && binStart <= max;
+        return overlaps ? 2.5 : 0;
       });
   }
 

@@ -1279,8 +1279,14 @@ export class EmotionViz extends EventEmitter {
 
   // --- Legend + interactions ------------------------------------------------
   setupLegend() {
-    const legendPanel = document.querySelector(".emotion-legend");
-    if (!legendPanel || !this.data) return;
+    if (!this.data || !this.container) return;
+
+    // Scope queries to the same section as this viz
+    const root =
+      this.container.closest(".section-container") || document;
+
+    const legendPanel = root.querySelector(".emotion-legend");
+    if (!legendPanel) return;
 
     legendPanel.innerHTML = "";
     const viz = this;
@@ -1332,7 +1338,7 @@ export class EmotionViz extends EventEmitter {
     });
 
     // Optional sort toggle control (checkbox or button)
-    const sortToggle = document.querySelector(".emotion-sort-toggle");
+    const sortToggle = root.querySelector(".emotion-sort-toggle");
     if (sortToggle) {
       // checkbox style
       if (

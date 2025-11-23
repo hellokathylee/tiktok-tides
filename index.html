@@ -219,38 +219,65 @@
         </div>
       </section>
 
-      <!-- Section 5: Takeaway (Emotion) - Bubble cloud + left legend + right drawer -->
-      <section id="section-takeaway" class="section scroll-section bg-neutral" role="region"
-        aria-labelledby="takeaway-title">
-        <div class="scene-layer scene--bubbles" aria-hidden="true"></div>
-        <div class="section-container layout-bubble-legend-drawer">
-          <div class="section-intro">
-            <h2 id="takeaway-title">Emotion in Motion</h2>
-            <p class="lead">Dive into the emotional language that pushes trends forward. Colours represent the emotional
-              tone, helping you spot which vibes spark the most popularity.</p>
-          </div>
+      <section
+  id="section-takeaway"
+  class="section scroll-section bg-neutral"
+  role="region"
+  aria-labelledby="takeaway-title"
+>
+  <div class="scene-layer scene--bubbles" aria-hidden="true"></div>
+  <div class="section-container layout-bubble-legend-drawer">
+    <div class="section-intro">
+      <h2 id="takeaway-title">Emotion in Motion</h2>
+      <p class="lead">
+        Dive into the emotional language that pushes trends forward. Colours
+        represent the emotional tone, helping you spot which vibes spark the
+        most popularity.
+      </p>
+    </div>
 
-          <div class="legend-panel" role="complementary" aria-label="Emotion categories">
-            <h3>Emotion Categories</h3>
-            <ul class="emotion-legend" role="list"></ul>
-            
-          </div>
-          <button class="emotion-sort-toggle" aria-pressed="false">
-              Sort into columns
-            </button>
+    <!-- NEW WRAPPER: two-column layout -->
+    <div class="emotion-layout">
+      <!-- LEFT COLUMN: legend + sort button -->
+      <div
+        class="legend-panel"
+        role="complementary"
+        aria-label="Emotion categories"
+      >
+        <h3>Emotion Categories</h3>
+        <ul class="emotion-legend" role="list"></ul>
 
-          <div id="viz-emotion" class="viz-container" data-viz="emotion"></div>
+        <!-- sort button now lives with legend, on the left -->
+        <button class="emotion-sort-toggle" aria-pressed="false">
+          Sort into columns
+        </button>
+      </div>
 
-          <div class="detail-drawer" aria-hidden="true" role="dialog" aria-labelledby="drawer-title">
-            <button class="drawer-close" aria-label="Close details">×</button>
-            <h3 id="drawer-title">Emotion Details</h3>
-            <div class="drawer-content">
-              <div class="sparkline-container"></div>
-              <div class="example-phrases"></div>
-            </div>
+      <!-- RIGHT COLUMN: viz + drawer -->
+      <div class="viz-and-drawer">
+        <div
+          id="viz-emotion"
+          class="viz-container"
+          data-viz="emotion"
+        ></div>
+
+        <div
+          class="detail-drawer"
+          aria-hidden="true"
+          role="dialog"
+          aria-labelledby="drawer-title"
+        >
+          <button class="drawer-close" aria-label="Close details">×</button>
+          <h3 id="drawer-title">Emotion Details</h3>
+          <div class="drawer-content">
+            <div class="sparkline-container"></div>
+            <div class="example-phrases"></div>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+</section>
 
       <!-- Section 6: Ingredients Quiz - Card grid + modal -->
       <section id="section-conveyor" class="section scroll-section bg-lab" role="region"
