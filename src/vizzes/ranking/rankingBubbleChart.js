@@ -26,8 +26,8 @@ export class RankingBubbleChart {
     this.options = {
       maxAuthors: 18, // show top N authors in this category
       margin: { top: 40, right: 10, bottom: 25, left: 10 },
-      minRadius: 14,
-      maxRadius: 60,
+      minRadius: 25,
+      maxRadius: 70,
       dataPath: '/data/youtube_shorts_tiktok_trends_2025.csv',
       ...options
     };
@@ -342,15 +342,18 @@ export class RankingBubbleChart {
     stats = stats.slice(0, 25);
 
     // Proportional circle sizes (area ~ views)
-    const maxViews =
-      d3.max(stats, (d) => d.totalViews) || 1;
-    const rScale = d3
-      .scaleSqrt()
-      .domain([0, maxViews])
+    const viewsExtent = d3.extent(stats, (d) => d.totalViews);
+    const minViews = viewsExtent[0] ?? 0;
+    const maxViews = viewsExtent[1] ?? 1;
+
+    // Map [minViews, maxViews] → [minRadius, maxRadius]
+    // This stretches the differences between creators in this category.
+    const baseRScale = d3.scaleSqrt()
+      .domain([minViews, maxViews])
       .range([this.options.minRadius, this.options.maxRadius]);
 
     stats.forEach((d) => {
-      d.r = rScale(d.totalViews);
+      d.r = baseRScale(d.totalViews);
     });
 
     this.authorStats = stats;
@@ -583,8 +586,8 @@ export class RankingBubbleChart {
 
   moveTooltip(event) {
     if (!this.tooltip) return;
-    const offsetX = -40;
-    const offsetY = 20;
+    const offsetX = -320; // position left of cursor
+    const offsetY = -200; // position above of cursor
 
     let x = event.pageX + offsetX;
     let y = event.pageY + offsetY;
