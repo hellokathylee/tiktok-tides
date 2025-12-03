@@ -2,7 +2,9 @@
 
 Website: https://hellokathylee.github.io/tiktok-tides/
 
-Video demo: https://drive.google.com/file/d/1GTvbbvG42h7OBGHlBKdmMyEerWZx0mI5/view?usp=sharing
+Video Demo: https://drive.google.com/file/d/1GTvbbvG42h7OBGHlBKdmMyEerWZx0mI5/view?usp=sharing
+
+Process Book: https://docs.google.com/document/d/1cRX_BdFo0zgcfV3bDj7IyEblyjZmAraN1hMUnKsyIbE/edit?tab=t.8n0i8ha4fj9#heading=h.5swkwg7613l8
 
 ## Overview
 
